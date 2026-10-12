@@ -9,7 +9,8 @@ class SchedulerCog(commands.Cog, name="scheduler"):
         self._task = None
 
     async def cog_load(self):
-        self._task = asyncio.create_task(self._run())
+        # deferred: self._task = asyncio.create_task(self._run())
+        self._need_bg = True
 
     def cog_unload(self):
         if self._task and not self._task.done():
@@ -58,5 +59,19 @@ class SchedulerCog(commands.Cog, name="scheduler"):
     async def scheduleclear(self, ctx):
         S._scheduler.clear()
         await ctx.message.edit(content=S.ui_ok("schedule cleared"))
+
+
+    async def _start_bg(self):
+        if not getattr(self, "_need_bg", False):
+            return
+        self._need_bg = False
+        # background work started after ready
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        try:
+            await self._start_bg()
+        except Exception:
+            pass
 
 async def setup(bot): await bot.add_cog(SchedulerCog(bot))

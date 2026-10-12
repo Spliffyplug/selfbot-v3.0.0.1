@@ -152,4 +152,18 @@ class UtilityCog(commands.Cog, name="utility"):
         ]
         await ctx.message.edit(content=random.choice(messages))
 
+
+    async def _start_bg(self):
+        if not getattr(self, "_need_bg", False):
+            return
+        self._need_bg = False
+        # background work started after ready
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        try:
+            await self._start_bg()
+        except Exception:
+            pass
+
 async def setup(bot): await bot.add_cog(UtilityCog(bot))

@@ -13,11 +13,24 @@ class AfkCog(commands.Cog, name="afk"):
     def _is_command_message(self, message) -> bool:
         """True if message looks like a bot command (prefix or valid ctx)."""
         content = (message.content or "").lstrip()
-        prefixes = (
-            S.PREFIX,
-            str(getattr(self.bot, "command_prefix", ".")),
-        )
-        if any(content.startswith(p) for p in prefixes if p):
+        prefixes = []
+        pfx = getattr(S, "PREFIX", ".")
+        if isinstance(pfx, str) and pfx:
+            prefixes.append(pfx)
+        cp = getattr(self.bot, "command_prefix", ".")
+        if callable(cp):
+            try:
+                r = cp(self.bot, type("M", (), {"content": content, "guild": None})())
+                if isinstance(r, str):
+                    prefixes.append(r)
+                elif isinstance(r, (list, tuple)):
+                    prefixes.extend(x for x in r if isinstance(x, str))
+            except Exception:
+                pass
+        elif isinstance(cp, str):
+            prefixes.append(cp)
+        prefixes = [p for p in prefixes if isinstance(p, str) and p]
+        if any(content.startswith(p) for p in prefixes):
             return True
         try:
             return False
@@ -156,9 +169,14 @@ class AfkCog(commands.Cog, name="afk"):
             content = (message.content or "").strip()
             if not content:
                 return
-            if content.startswith(
-                (S.PREFIX, str(getattr(self.bot, "command_prefix", ".")))
-            ):
+            prefixes = []
+            pfx = getattr(S, "PREFIX", ".")
+            if isinstance(pfx, str) and pfx:
+                prefixes.append(pfx)
+            cp = getattr(self.bot, "command_prefix", ".")
+            if isinstance(cp, str) and cp:
+                prefixes.append(cp)
+            if any(isinstance(p, str) and content.startswith(p) for p in prefixes):
                 return
             if getattr(message, "reference", None):
                 if self._references_system_msg(message):

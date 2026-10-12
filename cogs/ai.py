@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio, aiohttp
 from discord.ext import commands
 from . import state as S

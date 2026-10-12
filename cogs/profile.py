@@ -86,33 +86,7 @@ class ProfileCog(commands.Cog, name="profile"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="setbio", brief="Set profile bio")
-    async def setbio(self, ctx, *, bio: str = ""):
-        async with aiohttp.ClientSession() as s:
-            async with s.patch(
-                "https://discord.com/api/v9/users/@me/profile",
-                headers=_h(),
-                json={"bio": bio},
-            ) as r:
-                if r.status in (200, 204):
-                    await ctx.message.edit(content=S.ui_ok(f"bio set ({len(bio)} chars)"))
-                else:
-                    body = await r.text()
-                    await ctx.message.edit(content=S.ui_err(f"failed ({r.status}) {body[:120]}"))
 
-    @commands.command(name="setpronouns", brief="Set pronouns")
-    async def setpronouns(self, ctx, *, pronouns: str = ""):
-        async with aiohttp.ClientSession() as s:
-            async with s.patch(
-                "https://discord.com/api/v9/users/@me/profile",
-                headers=_h(),
-                json={"pronouns": pronouns},
-            ) as r:
-                if r.status in (200, 204):
-                    await ctx.message.edit(content=S.ui_ok(f"pronouns → {pronouns or 'cleared'}"))
-                else:
-                    body = await r.text()
-                    await ctx.message.edit(content=S.ui_err(f"failed ({r.status}) {body[:120]}"))
 
     @commands.command(name="setbanner", brief="Set profile banner by URL or attachment")
     async def setbanner(self, ctx, url: str = ""):

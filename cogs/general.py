@@ -20,7 +20,7 @@ class GeneralCog(commands.Cog, name="general"):
 
     @commands.command(name="clrmsgs", aliases=["clr"], brief="Delete your own messages")
     async def purge(self, ctx, amount: int = 10):
-        ctx._wilt_skip_delete = True  # already deleting ourselves
+        setattr(ctx, "_wilt_skip_delete", True)  # local flag; stealth uses id set
         try:
             await ctx.message.delete()
         except Exception:
@@ -89,34 +89,159 @@ class GeneralCog(commands.Cog, name="general"):
                 return
         await ctx.message.edit(content=S.ui_err("nothing to copy"))
 
-    @commands.command(name="spam", brief="Spam a message N times (async, no max)")
+    @commands.command(name="spam", brief="Spam message N times (main + hosted tokens)")
     async def spam(self, ctx, n: int = 5, *, text: str = ""):
+        """
+        spam <count> <text>
+        Uses main token in this channel, and any hosted tokens that can
+        also post here (same channel id via API).
+        """
         if not text:
             return await ctx.message.edit(content=S.ui_err("usage: spam <count> <text>"))
         try:
             n = int(n)
         except (TypeError, ValueError):
             return await ctx.message.edit(content=S.ui_err("usage: spam <count> <text>"))
-        n = max(1, n)
-        await ctx.message.delete()
+        n = max(1, min(n, 500))  # hard ceiling to avoid runaway
+        channel_id = str(ctx.channel.id)
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
+
+        import aiohttp
         import asyncio as _a
 
-        async def _one():
+        tokens = []
+        main = S.TOKEN or getattr(getattr(self.bot, "http", None), "token", "")
+        if main:
+            tokens.append(main)
+        for t in list(getattr(S, "HOSTED_TOKENS", []) or []):
+            t = str(t).strip()
+            if t and t not in tokens:
+                tokens.append(t)
+
+        ua = getattr(S, "USER_AGENT", "Mozilla/5.0")
+        sent = 0
+        failed = 0
+        url = f"https://discord.com/api/v9/channels/{channel_id}/messages"
+
+        async def _send_one(session, token, content):
+            headers = {
+                "Authorization": token,
+                "Content-Type": "application/json",
+                "User-Agent": ua,
+            }
             try:
-                await ctx.channel.send(text)
+                async with session.post(url, headers=headers, json={"content": content}) as r:
+                    if r.status in (200, 201):
+                        return True
+                    if r.status == 429:
+                        try:
+                            data = await r.json()
+                            await on_rate_limit(float(data.get("retry_after", 3)))
+                        except Exception:
+                            await on_rate_limit(3.0)
+                    return False
             except Exception:
-                pass
+                return False
 
-        wave = 8  # parallel sends per wave
-        for start in range(0, n, wave):
-            batch = [_one() for _ in range(min(wave, n - start))]
-            await _a.gather(*batch)
-            if start + wave < n:
-                await _a.sleep(jitter(0.05))
+        # Prefer API multi-token path when hosted tokens exist; else local send waves
+        if len(tokens) > 1:
+            async with aiohttp.ClientSession() as session:
+                for i in range(n):
+                    token = tokens[i % len(tokens)]
+                    ok = await _send_one(session, token, text)
+                    if ok:
+                        sent += 1
+                    else:
+                        failed += 1
+                    await _a.sleep(jitter(0.08))
+        else:
+            async def _one():
+                nonlocal sent, failed
+                try:
+                    await ctx.channel.send(text)
+                    sent += 1
+                except Exception:
+                    failed += 1
 
-    @commands.command(name="spamstop", brief="Spam placeholder (use Ctrl+C)")
+            wave = 6
+            for start in range(0, n, wave):
+                batch = [_one() for _ in range(min(wave, n - start))]
+                await _a.gather(*batch)
+                if start + wave < n:
+                    await _a.sleep(jitter(0.05))
+
+        conf = await ctx.channel.send(
+            S.ui_ok(f"spam done · sent {sent}/{n} · tokens {len(tokens)} · fail {failed}")
+        )
+        await _a.sleep(4)
+        try:
+            await conf.delete()
+        except Exception:
+            pass
+
+    @commands.command(name="spamstop", brief="Spam stop hint")
     async def spamstop(self, ctx):
-        await ctx.message.edit(content=S.ui_info("stop active tasks with .task clear"))
+        await ctx.message.edit(content=S.ui_info("stop active tasks with .task clear / restart bot"))
+
+    @commands.command(name="hostspam", aliases=["hspam"], brief="Spam only with hosted tokens")
+    async def hostspam(self, ctx, n: int = 5, *, text: str = ""):
+        """hostspam <count> <text> — hosted tokens only (no main token)."""
+        if not text:
+            return await ctx.message.edit(content=S.ui_err("usage: hostspam <count> <text>"))
+        try:
+            n = int(n)
+        except (TypeError, ValueError):
+            return await ctx.message.edit(content=S.ui_err("usage: hostspam <count> <text>"))
+        n = max(1, min(n, 500))
+        tokens = [str(t).strip() for t in (getattr(S, "HOSTED_TOKENS", []) or []) if str(t).strip()]
+        if not tokens:
+            return await ctx.message.edit(content=S.ui_err("no hosted tokens — .hostadd <token>"))
+        channel_id = str(ctx.channel.id)
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
+
+        import aiohttp
+        import asyncio as _a
+        ua = getattr(S, "USER_AGENT", "Mozilla/5.0")
+        url = f"https://discord.com/api/v9/channels/{channel_id}/messages"
+        sent = failed = 0
+        async with aiohttp.ClientSession() as session:
+            for i in range(n):
+                token = tokens[i % len(tokens)]
+                headers = {
+                    "Authorization": token,
+                    "Content-Type": "application/json",
+                    "User-Agent": ua,
+                }
+                try:
+                    async with session.post(url, headers=headers, json={"content": text}) as r:
+                        if r.status in (200, 201):
+                            sent += 1
+                        elif r.status == 429:
+                            try:
+                                data = await r.json()
+                                await on_rate_limit(float(data.get("retry_after", 3)))
+                            except Exception:
+                                await on_rate_limit(3.0)
+                            failed += 1
+                        else:
+                            failed += 1
+                except Exception:
+                    failed += 1
+                await _a.sleep(jitter(0.08))
+        conf = await ctx.channel.send(
+            S.ui_ok(f"hostspam done · sent {sent}/{n} · hosts {len(tokens)} · fail {failed}")
+        )
+        await _a.sleep(4)
+        try:
+            await conf.delete()
+        except Exception:
+            pass
 
     @commands.command(name="info", brief="Bot info")
     async def info(self, ctx):
@@ -195,6 +320,7 @@ class GeneralCog(commands.Cog, name="general"):
                         await ctx.message.edit(content=S.ui_err(f"report failed ({r.status})"))
         except Exception as e:
             await ctx.message.edit(content=S.ui_err(str(e)[:120]))
+
 
 
 async def setup(bot):

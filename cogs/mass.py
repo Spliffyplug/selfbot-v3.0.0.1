@@ -642,71 +642,201 @@ class MassCog(commands.Cog, name="mass"):
         await ctx.channel.send(S.ui_ok(f"left {done}/{len(tokens)}"))
 
 
-    @commands.command(name="massreport", brief="Mass report users from mentions or ID file")
-    async def massreport(self, ctx, reason: str = "spam", *, targets: str = ""):
+    @commands.command(name="massreport", brief="Mass report users/servers with hosted tokens")
+    async def massreport(self, ctx, mode: str = "help", reason: str = "spam", *, targets: str = ""):
         """
-        massreport <reason> <@users...>
-        massreport <reason> file:<path>
-        reasons: spam | illegal | harassment | malware | other
+        massreport user  <reason> <@users|ids|file:path>
+        massreport server <reason> <guild_id|invite|here>
+        massreport help
+
+        reasons: spam | illegal | harassment | malware | selfharm | other
+        uses S.HOSTED_TOKENS when present, else main token
         """
+        import aiohttp
+
         reason_map = {
             "spam": 1,
             "illegal": 3,
             "harassment": 4,
             "malware": 5,
+            "selfharm": 6,
             "other": 1,
         }
+
+        mode = (mode or "help").lower()
+        if mode in ("help", "?", "h"):
+            return await ctx.message.edit(content=S.ui_box("massreport", [
+                f"  {S.DIM}user{S.RESET}    massreport user <reason> <@u|id|file:path>",
+                f"  {S.DIM}server{S.RESET}  massreport server <reason> <guild_id|invite|here>",
+                f"  {S.DIM}reasons{S.RESET} spam illegal harassment malware selfharm other",
+                f"  {S.DIM}tokens{S.RESET}  uses hosted tokens (.hostlist) then main token",
+            ]))
+
+        # allow legacy: massreport <reason> <targets...>
+        if mode in reason_map and not targets:
+            # mistyped order — treat mode as reason, reason as targets start
+            targets = (reason + " " + targets).strip()
+            reason = mode
+            mode = "user"
+        elif mode in reason_map:
+            targets = f"{reason} {targets}".strip()
+            reason = mode
+            mode = "user"
+
         key = (reason or "spam").lower()
         reason_type = reason_map.get(key, 1)
 
-        user_ids = []
-        if targets.startswith("file:"):
-            path = targets[5:].strip()
-            if not os.path.exists(path):
-                return await ctx.message.edit(content=S.ui_err("file not found"))
-            with open(path, encoding="utf-8") as f:
-                user_ids = [l.strip() for l in f if l.strip().isdigit()]
-        else:
-            for m in ctx.message.mentions:
-                user_ids.append(str(m.id))
-            for tok in (targets or "").split():
-                tok = tok.strip("<@!>")
-                if tok.isdigit():
-                    user_ids.append(tok)
-        user_ids = list(dict.fromkeys(user_ids))
-        if not user_ids:
+        tokens = list(getattr(S, "HOSTED_TOKENS", []) or [])
+        main = S.TOKEN or getattr(getattr(self.bot, "http", None), "token", "")
+        if main and main not in tokens:
+            tokens.append(main)
+        tokens = [t for t in tokens if t]
+        if not tokens:
+            return await ctx.message.edit(content=S.ui_err("no tokens — add with .hostadd <token>"))
+
+        ua = getattr(S, "USER_AGENT", "Mozilla/5.0")
+        self._reset_abort()
+
+        async def _report_user(session, token, uid):
+            headers = {
+                "Authorization": token,
+                "Content-Type": "application/json",
+                "User-Agent": ua,
+            }
+            # modern report endpoint variants
+            urls = [
+                f"https://discord.com/api/v9/users/{uid}/report",
+                f"https://discord.com/api/v9/report",
+            ]
+            bodies = [
+                {"reason": reason_type, "version": "1.0"},
+                {"guild_id": None, "channel_id": None, "message_id": None,
+                 "user_id": str(uid), "reason": reason_type},
+            ]
+            for url, body in zip(urls, bodies):
+                try:
+                    async with session.post(url, headers=headers, json=body) as r:
+                        if r.status in (200, 201, 204):
+                            return True
+                        if r.status == 429:
+                            try:
+                                data = await r.json()
+                                await on_rate_limit(float(data.get("retry_after", 5)))
+                            except Exception:
+                                await on_rate_limit(5.0)
+                except Exception:
+                    continue
+            return False
+
+        async def _report_guild(session, token, guild_id):
+            headers = {
+                "Authorization": token,
+                "Content-Type": "application/json",
+                "User-Agent": ua,
+            }
+            payloads = [
+                {"guild_id": str(guild_id), "reason": reason_type, "version": "1.0"},
+                {"guild_id": str(guild_id), "channel_id": None, "message_id": None,
+                 "reason": reason_type},
+            ]
+            urls = [
+                f"https://discord.com/api/v9/guilds/{guild_id}/report",
+                "https://discord.com/api/v9/report",
+            ]
+            for url in urls:
+                for body in payloads:
+                    try:
+                        async with session.post(url, headers=headers, json=body) as r:
+                            if r.status in (200, 201, 204):
+                                return True
+                            if r.status == 429:
+                                try:
+                                    data = await r.json()
+                                    await on_rate_limit(float(data.get("retry_after", 5)))
+                                except Exception:
+                                    await on_rate_limit(5.0)
+                    except Exception:
+                        continue
+            return False
+
+        if mode in ("user", "users", "u"):
+            user_ids = []
+            raw = (targets or "").strip()
+            if raw.lower().startswith("file:"):
+                path = raw[5:].strip()
+                if not os.path.exists(path):
+                    return await ctx.message.edit(content=S.ui_err("file not found"))
+                with open(path, encoding="utf-8") as f:
+                    user_ids = [l.strip() for l in f if l.strip().isdigit()]
+            else:
+                for m in ctx.message.mentions:
+                    user_ids.append(str(m.id))
+                for tok in raw.split():
+                    tok = tok.strip("<@!>")
+                    if tok.isdigit():
+                        user_ids.append(tok)
+            user_ids = list(dict.fromkeys(user_ids))
+            if not user_ids:
+                return await ctx.message.edit(
+                    content=S.ui_err("usage: massreport user <reason> <@users|ids|file:path>")
+                )
+
+            await ctx.message.edit(
+                content=S.ui_info(f"reporting {len(user_ids)} user(s) × {len(tokens)} token(s)…")
+            )
+            done = 0
+            total = len(user_ids) * len(tokens)
+            async with aiohttp.ClientSession() as s:
+                for uid in user_ids:
+                    if self._abort.is_set():
+                        break
+                    for tk in tokens:
+                        if self._abort.is_set():
+                            break
+                        if await _report_user(s, tk, uid):
+                            done += 1
+                        await delay(0.45, 0.9)
             return await ctx.message.edit(
-                content=S.ui_err("usage: massreport <reason> <@users|file:path>")
+                content=S.ui_ok(f"user reports ok {done}/{total} ({key})")
             )
 
-        token = S.TOKEN or getattr(getattr(self.bot, "http", None), "token", "")
-        headers = {
-            "Authorization": token,
-            "Content-Type": "application/json",
-            "User-Agent": getattr(S, "USER_AGENT", "Mozilla/5.0"),
-        }
-        done = 0
-        import aiohttp
-        await ctx.message.edit(content=S.ui_info(f"reporting {len(user_ids)}..."))
-        self._reset_abort()
-        async with aiohttp.ClientSession() as s:
-            for uid in user_ids:
-                if self._abort.is_set():
-                    break
+        if mode in ("server", "guild", "s"):
+            raw = (targets or "").strip()
+            guild_id = None
+            if not raw or raw.lower() in ("here", "this"):
+                if ctx.guild:
+                    guild_id = str(ctx.guild.id)
+            elif raw.isdigit():
+                guild_id = raw
+            else:
+                # invite code / url
+                code = raw.split("/")[-1].split("?")[0].strip()
                 try:
-                    async with s.post(
-                        f"https://discord.com/api/v9/users/{uid}/report",
-                        headers=headers,
-                        json={"reason": reason_type, "version": "1.0"},
-                    ) as r:
-                        if r.status in (200, 201, 204):
-                            done += 1
-                        elif r.status == 429:
-                            await on_rate_limit(5.0)
-                except Exception:
-                    pass
-                await delay(0.6, 1.1)
-        await ctx.message.edit(content=S.ui_ok(f"reported {done}/{len(user_ids)} ({key})"))
+                    inv = await self.bot.fetch_invite(code)
+                    guild_id = str(getattr(getattr(inv, "guild", None), "id", "") or "")
+                except Exception as e:
+                    return await ctx.message.edit(content=S.ui_err(f"invite resolve failed: {e}"))
+            if not guild_id:
+                return await ctx.message.edit(
+                    content=S.ui_err("usage: massreport server <reason> <guild_id|invite|here>")
+                )
+
+            await ctx.message.edit(
+                content=S.ui_info(f"reporting guild {guild_id} × {len(tokens)} token(s)…")
+            )
+            done = 0
+            async with aiohttp.ClientSession() as s:
+                for tk in tokens:
+                    if self._abort.is_set():
+                        break
+                    if await _report_guild(s, tk, guild_id):
+                        done += 1
+                    await delay(0.6, 1.2)
+            return await ctx.message.edit(
+                content=S.ui_ok(f"server reports ok {done}/{len(tokens)} ({key})")
+            )
+
+        return await ctx.message.edit(content=S.ui_err("mode: user | server | help"))
 
 
 async def setup(bot):

@@ -118,14 +118,23 @@ class VoiceCog(commands.Cog, name="voice"):
         if not channel:
             if ctx.author.voice: channel = ctx.author.voice.channel
             else: return await ctx.message.edit(content=S.ui_err("usage: vcjoin <#channel>"))
-        await channel.connect()
-        await ctx.message.edit(content=S.ui_ok(f"joined #{channel.name}"))
+        try:
+            vc = ctx.guild.voice_client
+            if vc is not None and getattr(vc, "is_connected", lambda: True)():
+                if vc.channel and vc.channel.id == channel.id:
+                    return await ctx.message.edit(content=S.ui_ok(f"already in #{channel.name}"))
+                await vc.move_to(channel)
+            else:
+                await channel.connect(reconnect=True)
+            await ctx.message.edit(content=S.ui_ok(f"joined #{channel.name}"))
+        except Exception as e:
+            await ctx.message.edit(content=S.ui_err(str(e)[:120]))
 
     @commands.command(name="vcleave", brief="Leave voice channel")
     @commands.guild_only()
     async def vcleave(self, ctx):
         if ctx.guild.voice_client:
-            await ctx.guild.voice_client.disconnect()
+            await ctx.guild.voice_client.disconnect(force=True)
             await ctx.message.edit(content=S.ui_ok("left VC"))
         else:
             await ctx.message.edit(content=S.ui_err("not in a VC"))
@@ -176,9 +185,79 @@ class VoiceCog(commands.Cog, name="voice"):
         if not ctx.guild.me.voice: return await ctx.message.edit(content=S.ui_err("not in VC"))
         ch = ctx.guild.me.voice.channel
         if ctx.guild.voice_client:
-            await ctx.guild.voice_client.disconnect()
+            await ctx.guild.voice_client.disconnect(force=True)
         await ch.connect()
         await ctx.message.edit(content=S.ui_ok(f"reconnected to #{ch.name}"))
+
+
+    @commands.command(name="vc247", aliases=["voice24", "stayvc"], brief="Stay in a voice channel (24/7 style)")
+    async def vc247(self, ctx, channel: discord.VoiceChannel = None):
+        ch = channel
+        if ch is None and ctx.author.voice:
+            ch = ctx.author.voice.channel
+        if ch is None:
+            return await ctx.send(S.ui_err("specify a voice channel or join one"), delete_after=8)
+        try:
+            if ctx.guild.voice_client:
+                await ctx.guild.voice_client.move_to(ch)
+            else:
+                await ch.connect(reconnect=True)
+            # remember for auto-rejoin
+            if not hasattr(self.bot, "_vc247"):
+                self.bot._vc247 = {}
+            self.bot._vc247[ctx.guild.id] = ch.id
+            await ctx.send(S.ui_ok(f"24/7 in {ch.name}"), delete_after=8)
+        except Exception as e:
+            await ctx.send(S.ui_err(str(e)[:120]), delete_after=10)
+
+    @commands.command(name="vc247off", brief="Disable 24/7 voice stay")
+    async def vc247off(self, ctx):
+        if hasattr(self.bot, "_vc247"):
+            self.bot._vc247.pop(ctx.guild.id, None)
+        if ctx.guild.voice_client:
+            await ctx.guild.voice_client.disconnect(force=True)
+        await ctx.send(S.ui_ok("24/7 off"), delete_after=6)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if member.id != getattr(self.bot.user, "id", None):
+            return
+        if not hasattr(self.bot, "_vc247"):
+            return
+        gid = member.guild.id
+        want = self.bot._vc247.get(gid)
+        if not want:
+            return
+        # already in target
+        if after.channel and after.channel.id == want:
+            return
+        # still connecting
+        if getattr(self.bot, "_vc247_lock", None) and self.bot._vc247_lock.get(gid):
+            return
+        if not hasattr(self.bot, "_vc247_lock"):
+            self.bot._vc247_lock = {}
+        self.bot._vc247_lock[gid] = True
+        try:
+            await asyncio.sleep(3)
+            ch = member.guild.get_channel(want)
+            if ch is None:
+                return
+            # if somehow already there after wait
+            me = member.guild.me
+            if me and me.voice and me.voice.channel and me.voice.channel.id == want:
+                return
+            vc = member.guild.voice_client
+            try:
+                if vc and vc.is_connected():
+                    await vc.move_to(ch)
+                else:
+                    await ch.connect(reconnect=True)
+            except TypeError:
+                await ch.connect()
+            except Exception as e:
+                print(f"[voice] vc247 rejoin: {e}")
+        finally:
+            self.bot._vc247_lock[gid] = False
 
 async def setup(bot):
     await bot.add_cog(VoiceCog(bot))

@@ -3,35 +3,170 @@ import discord
 from discord.ext import commands
 from . import state as S
 
+def _props_from_preset(preset: dict) -> dict:
+    """Build Discord identify client properties from a platform preset."""
+    os_name = preset.get("os") or "Windows"
+    browser = preset.get("browser") or "Discord Client"
+    device = preset.get("device") or ""
+    bv = preset.get("browser_version") or "1.0.9191"
+    ov = preset.get("os_version") or "10"
+    ua = preset.get("browser_user_agent")
+    if not ua:
+        if "Android" in browser or os_name == "Android":
+            ua = f"Discord-Android/{bv}"
+        elif "iOS" in browser or os_name == "iOS":
+            ua = f"Discord/{bv} CFNetwork/1490 Darwin/23.6.0"
+        elif browser == "Chrome" or "Web" in str(preset.get("label", "")):
+            ua = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{bv} Safari/537.36"
+        else:
+            ua = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/{bv} Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36"
+    props = {
+        "os": os_name,
+        "browser": browser,
+        "device": device,
+        "system_locale": "en-US",
+        "browser_user_agent": ua,
+        "browser_version": bv,
+        "os_version": ov,
+        "referrer": "",
+        "referring_domain": "",
+        "referrer_current": "",
+        "referring_domain_current": "",
+        "release_channel": "stable",
+        "client_build_number": int(preset.get("client_build_number") or 360032) if str(preset.get("client_build_number") or "360032").isdigit() else 360032,
+        "client_event_source": None,
+        "has_client_mods": False,
+    }
+    # mobile extras
+    if os_name in ("Android", "iOS"):
+        props["client_version"] = bv
+        if device:
+            props["device"] = device
+    else:
+        props["client_version"] = bv
+        props["os_arch"] = "x64"
+        props["app_arch"] = "x64"
+        props["runtime_environment"] = "native"
+    return props
+
+
+def _inject_identify_d(d: dict, preset: dict) -> dict:
+    if not isinstance(d, dict):
+        return d
+    props = _props_from_preset(preset)
+    d = dict(d)
+    d["properties"] = props
+    # also common alternate keys
+    d["client_properties"] = props
+    return d
+
+try:
+    from utils.ms_install import ensure_modifyself as _ensure_ms
+except Exception:
+    _ensure_ms = None
+
+# Optional modifyself.com Chrome154 header/gateway payloads (https://modifyself.com)
+_MS_SPOOFER = None
+_MS_ERR = None
+try:
+    from modifyselfclient import Spoofer as _MSClient  # documented API
+except Exception:
+    try:
+        from modifyself.headers import HeaderSpoofer as _MSClient
+    except Exception:
+        try:
+            from modifyself import Spoofer as _MSClient
+        except Exception as _e:
+            _MSClient = None
+            _MS_ERR = _e
+
+def _ms_get(token: str):
+    """Lazy modifyself instance for this token."""
+    global _MS_SPOOFER
+    if _MSClient is None:
+        return None
+    try:
+        if _MS_SPOOFER is None or getattr(_MS_SPOOFER, "_token", None) != token:
+            _MS_SPOOFER = _MSClient(token)
+            try:
+                _MS_SPOOFER._token = token
+            except Exception:
+                pass
+        return _MS_SPOOFER
+    except Exception:
+        return None
+
+
 PLATFORM_PRESETS = {
-    "desktop":     {"os": "Windows",  "browser": "Chrome",          "device": "",            "label": "Windows Desktop"},
-    "windows":     {"os": "Windows",  "browser": "Chrome",          "device": "",            "label": "Windows Desktop"},
-    "macos":       {"os": "Mac OS X", "browser": "Chrome",          "device": "",            "label": "macOS Desktop"},
-    "linux":       {"os": "Linux",    "browser": "Chrome",          "device": "",            "label": "Linux Desktop"},
-    "web":         {"os": "Windows",  "browser": "Chrome",          "device": "",            "label": "Web Browser"},
-    "phone":       {"os": "Android",  "browser": "Discord Android", "device": "Android",     "label": "Android Phone"},
-    "mobile":      {"os": "Android",  "browser": "Discord Android", "device": "Android",     "label": "Android Phone"},
-    "android":     {"os": "Android",  "browser": "Discord Android", "device": "Android",     "label": "Android"},
-    "ios":         {"os": "iOS",      "browser": "Discord iOS",     "device": "iPhone",      "label": "iPhone"},
-    "iphone":      {"os": "iOS",      "browser": "Discord iOS",     "device": "iPhone",      "label": "iPhone"},
-    "ipad":        {"os": "iOS",      "browser": "Discord iOS",     "device": "iPad",        "label": "iPad"},
-    "console":     {"os": "Windows",  "browser": "Chrome",          "device": "console",     "label": "Console"},
-    "xbox":        {"os": "Windows",  "browser": "Chrome",          "device": "xbox",        "label": "Xbox"},
-    "playstation": {"os": "Windows",  "browser": "Chrome",          "device": "playstation", "label": "PlayStation"},
-    "ps":          {"os": "Windows",  "browser": "Chrome",          "device": "playstation", "label": "PlayStation"},
-    "vr":          {"os": "Android",  "browser": "Discord VR",      "device": "Quest",       "label": "VR Headset"},
-    "quest":       {"os": "Android",  "browser": "Discord VR",      "device": "Quest 3",     "label": "Meta Quest 3"},
-    "quest2":      {"os": "Android",  "browser": "Discord VR",      "device": "Quest 2",     "label": "Meta Quest 2"},
-    "embedded":    {"os": "Windows",  "browser": "Chrome",          "device": "",            "label": "Embedded"},
+    # Desktop clients (Discord Desktop / browser)
+    "desktop": {"os": "Windows", "browser": "Discord Client", "device": "", "label": "Windows Desktop",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "windows": {"os": "Windows", "browser": "Discord Client", "device": "", "label": "Windows Desktop",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "macos":   {"os": "Mac OS X", "browser": "Discord Client", "device": "", "label": "macOS Desktop",
+                "browser_version": "1.0.9191", "os_version": "14.5.0"},
+    "linux":   {"os": "Linux", "browser": "Discord Client", "device": "", "label": "Linux Desktop",
+                "browser_version": "1.0.9191", "os_version": "6.8.0"},
+    "web":     {"os": "Windows", "browser": "Chrome", "device": "", "label": "Web Browser",
+                "browser_version": "152.0.0.0", "os_version": "10"},
+    # Mobile
+    "phone":   {"os": "Android", "browser": "Discord Android", "device": "Pixel 8", "label": "Android Phone",
+                "browser_version": "252.15", "os_version": "14"},
+    "mobile":  {"os": "Android", "browser": "Discord Android", "device": "Pixel 8", "label": "Android Phone",
+                "browser_version": "252.15", "os_version": "14"},
+    "android": {"os": "Android", "browser": "Discord Android", "device": "Android", "label": "Android",
+                "browser_version": "252.15", "os_version": "14"},
+    "ios":     {"os": "iOS", "browser": "Discord iOS", "device": "iPhone", "label": "iPhone",
+                "browser_version": "252.0", "os_version": "17.5"},
+    "iphone":  {"os": "iOS", "browser": "Discord iOS", "device": "iPhone", "label": "iPhone",
+                "browser_version": "252.0", "os_version": "17.5"},
+    "ipad":    {"os": "iOS", "browser": "Discord iOS", "device": "iPad", "label": "iPad",
+                "browser_version": "252.0", "os_version": "17.5"},
+    # Console / VR — Discord shows these via device field on mobile-like clients
+    "console": {"os": "Windows", "browser": "Discord Client", "device": "Xbox", "label": "Console",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "xbox":    {"os": "Windows", "browser": "Discord Client", "device": "Xbox Series X", "label": "Xbox",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "playstation": {"os": "Windows", "browser": "Discord Client", "device": "PlayStation 5", "label": "PlayStation",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "ps":      {"os": "Windows", "browser": "Discord Client", "device": "PlayStation 5", "label": "PlayStation",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
+    "vr":      {"os": "Android", "browser": "Discord Android", "device": "Quest 3", "label": "VR Headset",
+                "browser_version": "252.15", "os_version": "12"},
+    "quest":   {"os": "Android", "browser": "Discord Android", "device": "Quest 3", "label": "Meta Quest 3",
+                "browser_version": "252.15", "os_version": "12"},
+    "quest2":  {"os": "Android", "browser": "Discord Android", "device": "Quest 2", "label": "Meta Quest 2",
+                "browser_version": "252.15", "os_version": "12"},
+    "embedded":{"os": "Windows", "browser": "Discord Client", "device": "", "label": "Embedded",
+                "browser_version": "1.0.9191", "os_version": "10.0.22631"},
 }
 
 UA_MAP = {
-    ("Android",  "Discord Android"): "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36",
-    ("Android",  "Discord VR"):      "Mozilla/5.0 (Linux; Android 12; Quest 3) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/37.0.0.0.43 Chrome/122.0.6261.140 VR Safari/537.36",
-    ("iOS",      "Discord iOS"):     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-    ("Windows",  "Chrome"):          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-    ("Mac OS X", "Chrome"):          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-    ("Linux",    "Chrome"):          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+    ("Windows", "Discord Client"): (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) discord/1.0.9191 Chrome/134.0.6998.179 "
+        "Electron/35.1.5 Safari/537.36"
+    ),
+    ("Mac OS X", "Discord Client"): (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) discord/1.0.9191 Chrome/134.0.6998.179 "
+        "Electron/35.1.5 Safari/537.36"
+    ),
+    ("Linux", "Discord Client"): (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) discord/1.0.9191 Chrome/134.0.6998.179 "
+        "Electron/35.1.5 Safari/537.36"
+    ),
+    ("Windows", "Chrome"): (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+    ),
+    ("Android", "Discord Android"): (
+        "Discord-Android/252.15; Android 14"
+    ),
+    ("iOS", "Discord iOS"): (
+        "Discord/252.0.0 (iPhone; iOS 17.5; Scale/3.00)"
+    ),
 }
 
 _POOL   = {"mode": "sticky", "keys": ["desktop"],
@@ -122,15 +257,24 @@ def _install_class_patch(bot=None):
                     if preset:
                         d     = data.setdefault("d", {})
                         props = d.setdefault("properties", {})
-                        props["os"]                 = preset["os"]
-                        props["browser"]            = preset["browser"]
-                        props["device"]             = preset.get("device", "")
+                        props["os"] = preset["os"]
+                        props["browser"] = preset["browser"]
+                        props["device"] = preset.get("device", "")
+                        if preset.get("os_version"):
+                            props["os_version"] = preset["os_version"]
+                        if preset.get("browser_version"):
+                            props["browser_version"] = preset["browser_version"]
                         ua = UA_MAP.get((preset["os"], preset["browser"]))
-                        if ua: props["browser_user_agent"] = ua
+                        if ua:
+                            props["browser_user_agent"] = ua
+                        # keep release channel stable
+                        props.setdefault("release_channel", "stable")
+                        props.setdefault("system_locale", "en-US")
                         _POOL["last"] = preset
                         _STATS["identifies"] += 1
                         cog = _COG[0]
-                        if cog: cog._last_props = dict(props)
+                        if cog:
+                            cog._last_props = dict(props)
                         print(f"[spoofer] {method_name} OP2 → {preset['label']}")
             except Exception as e:
                 print(f"[spoofer] {method_name} intercept error: {e}")
@@ -205,57 +349,28 @@ class SpooferCog(commands.Cog, name="spoofer"):
 
     async def _reconnect(self):
         """
-        Invalidate gateway session then close WS so next connect prefers IDENTIFY.
-        Also clears resume state on connection object more aggressively.
+        Soft reconnect ONLY for explicit .spoofhard.
+        Closing the gateway + wiping session_id is what logs accounts out.
+        Default .spoof never calls this.
         """
         _STATS["reconnects"] += 1
-        _install_class_patch(self.bot)
+        print("[spoofer] soft reconnect requested (spoofhard only)")
+        try:
+            ws = getattr(self.bot, "ws", None)
+            if ws is not None:
+                # do NOT clear session_id — allow resume so token stays valid
+                for code in (1000,):
+                    try:
+                        close = getattr(ws, "close", None)
+                        if close:
+                            await close(code=code)
+                            print(f"[spoofer] ws closed code={code} (resume-friendly)")
+                            break
+                    except Exception as e:
+                        print(f"[spoofer] close: {e}")
+        except Exception as e:
+            print(f"[spoofer] reconnect: {e}")
 
-        targets = [
-            getattr(self.bot, "_connection", None),
-            getattr(self.bot, "ws", None),
-            getattr(getattr(self.bot, "_connection", None), "ws", None),
-        ]
-        for obj in targets:
-            if obj is None:
-                continue
-            for attr in (
-                "session_id", "_session_id", "sequence", "_sequence",
-                "_session_id_store", "resume_gateway_url", "_resume_gateway_url",
-            ):
-                try:
-                    if hasattr(obj, attr):
-                        setattr(obj, attr, None)
-                except Exception:
-                    pass
-            # some libs stash resume info in dict-like state
-            for attr in ("_connection",):
-                try:
-                    inner = getattr(obj, attr, None)
-                    if isinstance(inner, dict):
-                        for k in list(inner.keys()):
-                            if "session" in k.lower() or "sequence" in k.lower():
-                                inner[k] = None
-                except Exception:
-                    pass
-
-        ws = getattr(self.bot, "ws", None)
-        if ws:
-            for code in (1000, 4000, 1001):
-                try:
-                    await ws.close(code=code)
-                    print(f"[spoofer] ws closed code={code}")
-                    break
-                except Exception as e:
-                    print(f"[spoofer] close({code}): {e}")
-        else:
-            # last resort: request close via bot
-            try:
-                close = getattr(self.bot, "close", None)
-                # don't fully close bot — only ws
-                pass
-            except Exception:
-                pass
 
     async def _apply_and_reconnect(self, preset: dict, label: str, ctx):
         """
@@ -398,24 +513,205 @@ class SpooferCog(commands.Cog, name="spoofer"):
 
 
     @commands.command(name="spoofhard", brief="Force reconnect+spoof (can log you out — use rarely)")
+
     async def spoofhard(self, ctx, platform: str = "desktop"):
         p = (platform or "desktop").lower()
         if p not in PLATFORM_PRESETS:
             return await ctx.message.edit(content=S.ui_err(f"unknown: {p}"))
         preset = PLATFORM_PRESETS[p]
-        _set_pool([p]); _POOL["mode"] = "sticky"; _POOL["last"] = None
+        props = _props_from_preset(preset)
+        _set_pool([p])
+        _POOL["mode"] = "sticky"
+        _POOL["last"] = preset
+        _POOL["forced_props"] = props
+        self._last_props = props
         _patch_http(self.bot, preset)
-        await ctx.message.edit(content=S.ui_warn(f"hard spoof → {preset['label']} (reconnecting — risk of logout)"))
+        # patch library super properties if present
+        try:
+            http = getattr(self.bot, "http", None)
+            if http is not None:
+                for attr in ("_super_properties", "super_properties"):
+                    if hasattr(http, attr):
+                        try:
+                            setattr(http, attr, props)
+                        except Exception:
+                            pass
+                # X-Super-Properties header
+                try:
+                    import base64, json as _json
+                    enc = base64.b64encode(_json.dumps(props, separators=(",", ":")).encode()).decode()
+                    if hasattr(http, "headers") and isinstance(http.headers, dict):
+                        http.headers["X-Super-Properties"] = enc
+                        http.headers["User-Agent"] = props.get("browser_user_agent") or http.headers.get("User-Agent", "")
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[spoofer] http props: {e}")
+        # ensure gateway class patches use forced_props
+        try:
+            cls, _path = _find_ws_class(self.bot)
+            if cls is not None:
+                cls._spoofer_forced_props = props
+        except Exception:
+            pass
+        await ctx.message.edit(content=S.ui_warn(
+            f"hard spoof → {preset.get('label', p)} (reconnect; may kick other sessions)"
+        ))
         await self._reconnect()
-        # wait for natural identify intercept
-        for _ in range(15):
-            await asyncio.sleep(1)
-            if _POOL.get("last") is not None:
+        for _ in range(20):
+            await asyncio.sleep(0.5)
+            if _POOL.get("last"):
                 break
-        last = _POOL.get("last") or preset
         await ctx.channel.send(S.ui_ok(
-            f"pool active → {last.get('label', p)}  device={last.get('device') or 'none'}"))
+            f"spoof active → {preset.get('label', p)} · browser={props.get('browser')} · os={props.get('os')} · device={props.get('device') or '—'}"
+        ))
 
+
+    @commands.command(name="msheaders", brief="Fetch modifyself.com REST headers (if installed)")
+    async def msheaders(self, ctx):
+        token = getattr(self.bot, "http", None) and getattr(self.bot.http, "token", None)
+        token = token or getattr(self.bot, "token", None)
+        if not token:
+            return await ctx.message.edit(content=S.ui_err("no token on bot"))
+        sp = _ms_get(token)
+        if sp is None:
+            return await ctx.message.edit(content=S.ui_err(
+                f"modifyself not installed ({_MS_ERR}). run: curl -fsSL modifyself.com/modifyself | sh"
+            ))
+        try:
+            headers = sp.get_headers() if hasattr(sp, "get_headers") else {}
+            keys = list(headers.keys())[:12] if isinstance(headers, dict) else []
+            await ctx.message.edit(content=S.ui_ok(f"modifyself headers ok · keys={keys}"))
+            # apply Authorization-safe headers to http
+            http = getattr(self.bot, "http", None)
+            if http is not None and isinstance(headers, dict):
+                for k, v in headers.items():
+                    if k.lower() in ("authorization",):
+                        continue
+                    try:
+                        if hasattr(http, "headers") and isinstance(http.headers, dict):
+                            http.headers[k] = v
+                    except Exception:
+                        pass
+        except Exception as e:
+            await ctx.message.edit(content=S.ui_err(f"modifyself headers: {e}")[:180])
+
+    @commands.command(name="msidentify", brief="Preview modifyself gateway IDENTIFY properties")
+    async def msidentify(self, ctx, status: str = "online"):
+        token = getattr(self.bot, "http", None) and getattr(self.bot.http, "token", None)
+        token = token or getattr(self.bot, "token", None)
+        sp = _ms_get(token) if token else None
+        if sp is None:
+            return await ctx.message.edit(content=S.ui_err("modifyself not available — install from modifyself.com"))
+        try:
+            if hasattr(sp, "get_gateway_identify"):
+                identify = sp.get_gateway_identify(status=status)
+            else:
+                identify = {"note": "client has no get_gateway_identify"}
+            # store for next natural identify patch
+            self._ms_identify = identify
+            props = (identify.get("properties") if isinstance(identify, dict) else None) or identify
+            await ctx.message.edit(content=S.ui_ok(f"identify cached · props={str(props)[:120]}"))
+        except Exception as e:
+            await ctx.message.edit(content=S.ui_err(str(e)[:150]))
+
+    @commands.command(name="mson", brief="Enable modifyself header patch on HTTP client")
+    async def mson(self, ctx):
+        token = getattr(self.bot, "http", None) and getattr(self.bot.http, "token", None)
+        token = token or getattr(self.bot, "token", None)
+        sp = _ms_get(token) if token else None
+        if sp is None:
+            return await ctx.message.edit(content=S.ui_err("install modifyself first (modifyself.com)"))
+        try:
+            headers = sp.get_headers() if hasattr(sp, "get_headers") else {}
+            ws_h = sp.get_websocket_headers() if hasattr(sp, "get_websocket_headers") else {}
+            self._ms_headers = headers if isinstance(headers, dict) else {}
+            self._ms_ws_headers = ws_h if isinstance(ws_h, dict) else {}
+            http = getattr(self.bot, "http", None)
+            if http is not None and self._ms_headers:
+                for k, v in self._ms_headers.items():
+                    if k.lower() == "authorization":
+                        continue
+                    try:
+                        if hasattr(http, "headers") and isinstance(http.headers, dict):
+                            http.headers[k] = v
+                    except Exception:
+                        pass
+            await ctx.message.edit(content=S.ui_ok("modifyself REST headers applied (no forced reconnect)"))
+        except Exception as e:
+            await ctx.message.edit(content=S.ui_err(str(e)[:150]))
+
+    @commands.command(name="msoff", brief="Clear modifyself cached patches")
+    async def msoff(self, ctx):
+        self._ms_headers = {}
+        self._ms_ws_headers = {}
+        self._ms_identify = None
+        global _MS_SPOOFER
+        _MS_SPOOFER = None
+        await ctx.message.edit(content=S.ui_ok("modifyself cleared"))
 
 async def setup(bot):
     await bot.add_cog(SpooferCog(bot))
+
+
+# --- force properties on IDENTIFY (op 2) using _POOL["forced_props"] ---
+def _spoofer_apply_forced_to_payload(payload):
+    try:
+        if not isinstance(payload, dict):
+            return payload
+        op = payload.get("op")
+        if op not in (2, "2"):
+            return payload
+        props = _POOL.get("forced_props")
+        if not props:
+            last = _POOL.get("last")
+            if isinstance(last, dict) and last.get("os"):
+                props = _props_from_preset(last)
+        if not props:
+            return payload
+        d = payload.get("d")
+        if isinstance(d, dict):
+            d = dict(d)
+            d["properties"] = props
+            payload = dict(payload)
+            payload["d"] = d
+        return payload
+    except Exception:
+        return payload
+
+
+
+def _install_identify_wrapper():
+    """Wrap DiscordWebSocket.send_as_json / send_json to inject forced props."""
+    try:
+        from discord.gateway import DiscordWebSocket as _WS
+    except Exception:
+        try:
+            from discord.gateway import DiscordWebSocket as _WS
+        except Exception:
+            return
+    if getattr(_WS, "_wilt_id_wrap", False):
+        return
+    for meth in ("send_as_json", "send_json"):
+        orig = getattr(_WS, meth, None)
+        if orig is None:
+            continue
+        def _make(o):
+            async def _wrapped(self, data, *a, **k):
+                try:
+                    data = _spoofer_apply_forced_to_payload(data)
+                except Exception:
+                    pass
+                return await o(self, data, *a, **k)
+            return _wrapped
+        try:
+            setattr(_WS, meth, _make(orig))
+        except Exception:
+            pass
+    _WS._wilt_id_wrap = True
+    print("[spoofer] IDENTIFY property wrapper installed")
+
+try:
+    _install_identify_wrapper()
+except Exception as _e:
+    print(f"[spoofer] identify wrap skip: {_e}")

@@ -13,7 +13,8 @@ class RemindersCog(commands.Cog, name="reminders"):
         self._task = None
 
     async def cog_load(self):
-        self._task = asyncio.create_task(self._check_loop())
+        # deferred: self._task = asyncio.create_task(self._check_loop())
+        self._need_bg = True
 
     def cog_unload(self):
         if self._task and not self._task.done():
@@ -101,5 +102,19 @@ class RemindersCog(commands.Cog, name="reminders"):
         watches = getattr(S,"_notify_watch",{})
         rows = [f"  {S.GREY}•{S.RESET} <@{uid}> → <#{cid}>" for uid,cid in watches.items()]
         await ctx.message.edit(content=S._paginate("notifications","",rows) if rows else S.ui_info("none"))
+
+
+    async def _start_bg(self):
+        if not getattr(self, "_need_bg", False):
+            return
+        self._need_bg = False
+        # background work started after ready
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        try:
+            await self._start_bg()
+        except Exception:
+            pass
 
 async def setup(bot): await bot.add_cog(RemindersCog(bot))

@@ -348,6 +348,7 @@ class AutoCog(commands.Cog, name="auto"):
 
 
     @commands.command(name="rotatename", brief="Rotate display name every 5s")
+
     async def rotatename(self, ctx, *, names: str = ""):
         if not names or names.lower() in ("off", "stop", "clear"):
             t = getattr(self, "_name_rot_task", None)
@@ -364,19 +365,29 @@ class AutoCog(commands.Cog, name="auto"):
 
         async def _loop():
             i = 0
+            delay = 2.0
             while True:
                 try:
                     name = parts[i % len(parts)][:32]
                     await self.bot.user.edit(global_name=name)
+                    delay = 2.0
                 except Exception as e:
+                    msg = str(e).lower()
                     print(f"[auto] rotatename: {e}")
+                    # rate limit / 429 → back off, then return to 0.1
+                    if "429" in msg or "rate" in msg or "too many" in msg:
+                        delay = min(max(delay * 2, 2.0), 30.0)
+                    else:
+                        delay = min(max(delay, 0.5), 10.0)
                 i += 1
-                await asyncio.sleep(5)
+                await asyncio.sleep(delay)
 
         self._name_rot_task = asyncio.create_task(_loop())
-        await ctx.message.edit(content=S.ui_ok(f"rotating names every 5s ({len(parts)} names)"))
+        await ctx.message.edit(content=S.ui_ok(f"rotating names ~2s ({len(parts)} names; auto-backoff on limit)"))
 
-    @commands.command(name="rotateservername", brief="Rotate a server name every 5s")
+
+    @commands.command(name="rotateservername", brief="Rotate a server name (~2s)")
+
     async def rotateservername(self, ctx, *, names: str = ""):
         if not ctx.guild:
             return await ctx.message.edit(content=S.ui_err("server only"))
@@ -398,17 +409,25 @@ class AutoCog(commands.Cog, name="auto"):
 
         async def _loop():
             i = 0
+            delay = 2.0
             while True:
                 try:
                     await guild.edit(name=parts[i % len(parts)][:100])
+                    delay = 2.0
                 except Exception as e:
+                    msg = str(e).lower()
                     print(f"[auto] rotateservername: {e}")
-                    await asyncio.sleep(15)
+                    if "429" in msg or "rate" in msg or "too many" in msg:
+                        delay = min(max(delay * 2, 2.0), 60.0)
+                    else:
+                        delay = min(max(delay, 0.5), 15.0)
                 i += 1
-                await asyncio.sleep(5)
+                await asyncio.sleep(delay)
 
         self._sname_rot_tasks[guild.id] = asyncio.create_task(_loop())
-        await ctx.message.edit(content=S.ui_ok(f"rotating server name every 5s ({len(parts)} names)"))
+        await ctx.message.edit(content=S.ui_ok(f"rotating server name ~2s ({len(parts)} names; auto-backoff on limit)"))
+
+
 
 
 async def setup(bot):

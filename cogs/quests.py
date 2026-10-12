@@ -81,17 +81,44 @@ class _AiohttpTransport:
         self._session = None
 
     def _headers(self):
+        import base64
+        # Live fingerprint captured from He's browser client (Chrome 152 / build 630444).
+        # Prefer this exact base64 so Discord accepts quest enroll/progress.
+        xsp = (
+            "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwi"
+            "aGFzX2NsaWVudF9tb2RzIjpmYWxzZSwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAu"
+            "MDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzE1Mi4wLjAuMCBT"
+            "YWZhcmkvNTM3LjM2IiwiYnJvd3Nlcl92ZXJzaW9uIjoiMTUyLjAuMC4wIiwib3NfdmVyc2lvbiI6IjEwIiwicmVmZXJyZXIi"
+            "OiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVu"
+            "dCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjYzMDQ0NCwiY2xpZW50X2V2"
+            "ZW50X3NvdXJjZSI6bnVsbCwiY2xpZW50X2xhdW5jaF9pZCI6IjQ4ZDNiODY2LTA3OWMtNDBhNS05YzRmLThlYmRmMWZkMzcx"
+            "MyIsImxhdW5jaF9zaWduYXR1cmUiOiI5YjBiOGM0ZS1jNWM2LTQyZTUtODkxNC01YTIyN2U1OTUxODMiLCJjbGllbnRfaGVh"
+            "cnRiZWF0X3Nlc3Npb25faWQiOiJiNGU4YjU5Ni02ZGVlLTQ2NDQtOTU0OC03NmU4NTIzYjlhYWIiLCJjbGllbnRfYXBwX3N0"
+            "YXRlIjoidW5mb2N1c2VkIn0="
+        )
+        ua = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/152.0.0.0 Safari/537.36"
+        )
         return {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "discord/1.0.9191 Chrome/134.0.6998.179 "
-                "Electron/35.1.5 Safari/537.36"
-            ),
-            "Accept":          "*/*",
+            "User-Agent": ua,
+            "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.9",
-            "Content-Type":    "application/json",
-            "Authorization":   self._token,
+            "Content-Type": "application/json",
+            "Authorization": self._token,
+            "X-Super-Properties": xsp,
+            "X-Discord-Locale": "en-US",
+            "X-Discord-Timezone": "America/New_York",
+            "X-Debug-Options": "bugReporterEnabled",
+            "Origin": "https://discord.com",
+            "Referer": "https://discord.com/channels/@me",
+            "Sec-Ch-Ua": '"Chromium";v="152", "Not:A-Brand";v="99", "Google Chrome";v="152"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
         }
 
     async def _ensure(self):

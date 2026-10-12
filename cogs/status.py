@@ -16,7 +16,7 @@ def _custom_activity(name: str):
     try:
         return discord.Activity(type=discord.ActivityType.custom, name=name, state=name)
     except Exception:
-        return discord.Game(name=name)
+        return discord.Activity(type=discord.ActivityType.playing, name=name)
 
 
 class StatusCog(commands.Cog, name="status"):

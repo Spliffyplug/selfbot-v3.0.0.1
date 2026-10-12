@@ -21,11 +21,13 @@ BRAND  = f"{ESC}[0;35m{ESC}[1m{ESC}[4m"
 
 BOT     = None    # set in selfbot.py on_ready
 TOKEN   = ""
+BOT_TOKEN = ""
+BOT_CLIENT = None  # discord.Client for application bot
 PREFIX  = "."
 STEALTH_DELETE = True
 STEALTH_DELETE_SECONDS = 5
 DISCORD_MSG_LIMIT = 2000
-VERSION = "3.0.0"
+VERSION = "3.0.4(beta)"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 def load_config() -> dict:
@@ -191,147 +193,99 @@ _hosted_clients: list = []
 _live_prefix: list = ["."]
 
 
+
+
+
+
+
+
+
+
 def _clip(text: str, limit: int = None) -> str:
-    limit = limit or DISCORD_MSG_LIMIT
-    if text is None:
-        return ""
+    if limit is None:
+        limit = 1900
     text = str(text)
     if len(text) <= limit:
         return text
-    return text[: max(0, limit - 20)] + "\n…(trimmed)"
+    return text[: max(0, limit - 3)] + "..."
 
 def _ansi_block(lines) -> str:
+    """Single ```ansi block — works desktop + mobile Discord clients."""
     parts = []
-    for line in lines:
-        parts.append("" if not line.strip() else line)
-    body = chr(10).join(parts).strip()
+    for line in lines or []:
+        s = "" if line is None else str(line)
+        if not s.strip():
+            parts.append("")
+        else:
+            parts.append(s)
+    body = "\n".join(parts).strip("\n")
     return _clip("```ansi\n" + body + "\n```")
 
-def ui_box(title: str, rows, footer: str = "") -> str:
-    lines = [f"  {WHITE}{title}{RESET}"] + list(rows)
-    if footer: lines += ["", f"  {DIM}{footer}{RESET}"]
+def ui_box(title: str, rows=None, footer: str = "") -> str:
+    lines = [f"\x1b[35m\x1b[1m{title}\x1b[0m"]
+    for r in (rows or []):
+        lines.append(f"\x1b[2;37m{str(r).lstrip()}\x1b[0m")
+    if footer:
+        lines.append("")
+        lines.append(f"\x1b[2m{footer}\x1b[0m")
     return _ansi_block(lines)
 
-def ui_ok(msg):   return _ansi_block([f"  {GREEN}✓{RESET}  {msg}"])
-def ui_err(msg):  return _ansi_block([f"  {RED}✗{RESET}  {msg}"])
-def ui_info(msg): return _ansi_block([f"  {CYAN}•{RESET}  {msg}"])
-def ui_warn(msg): return _ansi_block([f"  {YELLOW}!{RESET}  {msg}"])
+def ui_ok(msg) -> str:
+    return _ansi_block([f"\x1b[32mok\x1b[0m  \x1b[2;37m{msg}\x1b[0m"])
 
-def ui_progress(label: str, pct: int) -> str:
-    filled = int(max(0, min(pct, 100)) / 10)
-    bar    = f"{GREEN}{'█' * filled}{GREY}{'░' * (10 - filled)}{RESET}"
-    return f"  {bar} {WHITE}{pct}%{RESET}  {DIM}{label}{RESET}"
+def ui_err(msg) -> str:
+    return _ansi_block([f"\x1b[31merr\x1b[0m  \x1b[2;37m{msg}\x1b[0m"])
 
-def _paginate(title: str, subtitle: str, rows: list, page: int = 1) -> str:
-    PAGE  = 8
-    total = max(1, math.ceil(len(rows) / PAGE))
-    page  = max(1, min(page, total))
-    chunk = rows[(page-1)*PAGE : page*PAGE]
-    lines = [f"  {WHITE}> {title}{RESET}  {DIM}{subtitle}{RESET}", ""] + chunk + [
-        "", f"  {DIM}page {page}/{total}{RESET}",
-    ]
-    return _ansi_block(lines)
+def ui_info(msg) -> str:
+    return _ansi_block([f"\x1b[36m·\x1b[0m  \x1b[2;37m{msg}\x1b[0m"])
 
-def _get_session():
-    return None  # aiohttp sessions now managed per-cog or via bot._session
+def ui_warn(msg) -> str:
+    return _ansi_block([f"\x1b[33m!\x1b[0m  \x1b[2;37m{msg}\x1b[0m"])
 
-def log_msg(msg: str):
-    try:
-        with open(LOG_FILE, "a") as f:
-            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
-    except Exception: pass
+def load_afk():
+    """AFK state loader used by afk cog / boot."""
+    return afk if isinstance(afk, dict) else {"on": False, "message": "afk", "since": 0}
 
-OWNER_ID: int           = 0
-def access_save():
-    """Persist OWNER_ID / admins / devs into config.json."""
-    try:
-        cfg = load_config()
-        cfg["owner_id"] = OWNER_ID
-        cfg["admins"] = list(_admins)
-        cfg["devs"] = list(_devs)
-        save_config(cfg)
-    except Exception as e:
-        print(f"[state] access_save: {e}")
+def save_afk(data=None):
+    global afk
+    if data is not None:
+        afk = data
+    return afk
+
+# --- sync defaults (3.0.5) ---
+HOST_PUBLIC = False
+OWNER_ID = 0
+SPOOF = {}
+RPC = {}
+DATA = {}
+RESET = "\033[0m"
+DIM = "\033[2m"
+GREY = "\033[90m"
+CYAN = "\033[36m"
+GREEN = "\033[32m"
+RED = "\033[31m"
+WHITE = "\033[37m"
+BRAND = "\033[35m"
+DARK = "\033[90m"
+BLUE2 = "\033[94m"
+CYAN2 = "\033[96m"
 
 
-_channel_blacklist: set  = set()
-_server_blacklist:  set  = set()
-_user_notes:        dict = {}
-personal_blocklist: set  = set()
-personal_ignore:    set  = set()
-profile_history:    dict = {}
+def resolve_prefix(bot=None, message=None) -> str:
+    """Always return a str prefix (never a callable)."""
+    p = PREFIX
+    if message is not None:
+        try:
+            gid = str(getattr(message.guild, "id", "")) if getattr(message, "guild", None) else ""
+            if gid and gid in _server_prefixes:
+                p = _server_prefixes[gid]
+        except Exception:
+            pass
+    return p if isinstance(p, str) and p else "."
 
-_ping_tracking: dict = {}
-_ping_log:      list = []
 
-_notify_watch: dict = {}
-
-_dev_mode:     bool = False
-_error_log:    list = []
-_github_watch: dict = {}
-
-_vsniper_enabled: bool = True
-_autoreconnect:   bool = True   # alias for _auto_reconnect
-_autorestart:     bool = False  # alias for _auto_restart
-
-_serverguard_user_whitelist: set = set()
-_user_blacklist2: set = set()
-
-def get(key, default=None):
-    import cogs.state as _s
-    return getattr(_s, key, default)
-
-try:
-    _ac = load_config()
-    if _ac.get("owner_id"):
-        OWNER_ID = int(_ac["owner_id"])
-    if _ac.get("admins"):
-        _admins.update(int(x) for x in _ac["admins"])
-    if _ac.get("devs"):
-        _devs.update(int(x) for x in _ac["devs"])
-except Exception:
-    pass
-
-def save_afk() -> None:
-    try:
-        cfg = load_config()
-        a = afk
-        cfg["afk"] = {
-            "enabled": bool(a.get("enabled")),
-            "message": a.get("message") or "",
-            "emergency": bool(a.get("emergency")),
-            "dm_only": bool(a.get("dm_only")),
-            "cooldown": int(a.get("cooldown") or 30),
-            "expires_at": float(a.get("expires_at") or 0),
-            "since": float(a.get("since") or 0),
-            "blacklist": list(a.get("blacklist") or []),
-            "whitelist": list(a.get("whitelist") or []),
-            "custom_replies": dict(a.get("custom_replies") or {}),
-            "per_server": dict(a.get("per_server") or {}),
-        }
-        save_config(cfg)
-    except Exception as e:
-        print(f"[state] save_afk: {e}")
-
-def load_afk() -> None:
-    try:
-        cfg = load_config()
-        data = cfg.get("afk") or {}
-        if not data:
-            return
-        afk["enabled"] = bool(data.get("enabled"))
-        afk["message"] = data.get("message") or ""
-        afk["emergency"] = bool(data.get("emergency"))
-        afk["dm_only"] = bool(data.get("dm_only"))
-        afk["cooldown"] = int(data.get("cooldown") or 30)
-        afk["expires_at"] = float(data.get("expires_at") or 0)
-        afk["since"] = float(data.get("since") or 0)
-        afk["blacklist"] = set(data.get("blacklist") or [])
-        afk["whitelist"] = set(data.get("whitelist") or [])
-        afk["custom_replies"] = dict(data.get("custom_replies") or {})
-        afk["per_server"] = dict(data.get("per_server") or {})
-        afk["ping_counter"] = {}
-        afk["last_reply"] = {}
-    except Exception as e:
-        print(f"[state] load_afk: {e}")
-
+def ensure_prefix() -> str:
+    global PREFIX
+    if not isinstance(PREFIX, str) or not PREFIX:
+        PREFIX = "."
+    return PREFIX

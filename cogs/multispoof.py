@@ -37,7 +37,7 @@ class MultiSpoofCog(commands.Cog, name="multispoof"):
     async def _apply_key(self, key: str, *, reconnect: bool = False) -> str:
         """
         Push platform into spoofer pool.
-        reconnect=True only for one-shot sticky (still risky — Discord may invalidate).
+        reconnect=False only for one-shot sticky (still risky — Discord may invalidate).
         Rotate never reconnects; it only updates the pool so the *next natural*
         identify (login / network blip) picks the device. Safe for the token.
         """
@@ -59,7 +59,7 @@ class MultiSpoofCog(commands.Cog, name="multispoof"):
         SP._POOL["last"] = preset  # soft-mark as active selection
 
         if not reconnect:
-            return preset.get("label", key) + " (soft — next login applies device)"
+            return label  # soft only — never force gateway close
 
         # One-shot sticky only — single reconnect + optional force identify
         cog = self.bot.get_cog("spoofer")
@@ -67,10 +67,10 @@ class MultiSpoofCog(commands.Cog, name="multispoof"):
             return preset.get("label", key)
         try:
             if hasattr(cog, "_reconnect"):
-                await cog._reconnect()
+                pass  # reconnect disabled in multispoof
             await asyncio.sleep(2)
             if hasattr(cog, "_force_identify"):
-                await cog._force_identify(preset)
+                pass  # force identify disabled
         except Exception as e:
             print(f"[multispoof] reconnect/identify: {e}")
             return f"err:{e}"
