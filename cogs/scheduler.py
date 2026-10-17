@@ -3,17 +3,17 @@ from discord.ext import commands
 from . import state as S
 from .antid import jitter
 
-class SchedulerCog(commands.Cog, name="scheduler"):
+class SchedulerCog(commands.Cog, name='scheduler'):
+
     def __init__(self, bot):
         self.bot = bot
         self._task = None
 
     async def cog_load(self):
-        # deferred: self._task = asyncio.create_task(self._run())
-        self._need_bg = True
+        self._task = asyncio.create_task(self._run())
 
     def cog_unload(self):
-        if self._task and not self._task.done():
+        if self._task and (not self._task.done()):
             self._task.cancel()
 
     async def _run(self):
@@ -22,50 +22,54 @@ class SchedulerCog(commands.Cog, name="scheduler"):
             now = time.time()
             fired = []
             for entry in S._scheduler:
-                if now >= entry.get("at", 0):
+                if now >= entry.get('at', 0):
                     fired.append(entry)
-                    ch = self.bot.get_channel(entry.get("channel", 0))
+                    ch = self.bot.get_channel(entry.get('channel', 0))
                     if ch:
-                        try: await ch.send(entry.get("message","scheduled message"))
-                        except Exception: pass
-            for e in fired: S._scheduler.remove(e)
+                        try:
+                            await ch.send(entry.get("message", "scheduled message"))
+                        except Exception:
+                            pass
+            for e in fired:
+                S._scheduler.remove(e)
             await asyncio.sleep(jitter(10.0))
 
-    @commands.command(name="schedule", brief="Schedule a message")
-    async def schedule(self, ctx, when: str = "", *, text: str = ""):
+    @commands.command(name='schedule', brief='Schedule a message')
+    async def schedule(self, ctx, when: str='', *, text: str=''):
         if not when or not text:
-            return await ctx.message.edit(content=S.ui_err("usage: schedule <time> <message>"))
+            return await S.safe_edit(ctx.message, S.ui_err('usage: schedule <time> <message>'))
         secs = 0
         try:
-            if when.endswith("m"): secs = int(when[:-1] or "0") * 60
-            elif when.endswith("h"): secs = int(when[:-1] or "0") * 3600
-            elif when.endswith("s"): secs = int(when[:-1] or "0")
-            else: secs = int(when)
+            if when.endswith('m'):
+                secs = int(when[:-1] or '0') * 60
+            elif when.endswith('h'):
+                secs = int(when[:-1] or '0') * 3600
+            elif when.endswith('s'):
+                secs = int(when[:-1] or '0')
+            else:
+                secs = int(when)
         except (TypeError, ValueError):
-            return await ctx.message.edit(content=S.ui_err("invalid time"))
+            return await S.safe_edit(ctx.message, S.ui_err('invalid time'))
         if secs <= 0:
-            return await ctx.message.edit(content=S.ui_err("time must be > 0"))
-        S._scheduler.append({"at": time.time()+secs, "channel": ctx.channel.id, "message": text})
-        await ctx.message.edit(content=S.ui_ok(f"scheduled in {when}: {text[:40]}"))
+            return await S.safe_edit(ctx.message, S.ui_err('time must be > 0'))
+        S._scheduler.append({'at': time.time() + secs, 'channel': ctx.channel.id, 'message': text})
+        await S.safe_edit(ctx.message, S.ui_ok(f'scheduled in {when}: {text[:40]}'))
 
-    @commands.command(name="schedulelist", brief="List scheduled messages")
+    @commands.command(name='schedulelist', brief='List scheduled messages')
     async def schedulelist(self, ctx):
         now = time.time()
-        rows = [f"  {S.GREY}•{S.RESET} in {int(e['at']-now)}s: {e['message'][:50]}"
-                for e in S._scheduler]
-        await ctx.message.edit(content=S._paginate("scheduled","",rows) if rows else S.ui_info("none"))
+        rows = [f"  {S.GREY}*{S.RESET} in {int(e['at'] - now)}s: {e['message'][:50]}" for e in S._scheduler]
+        await S.safe_edit(ctx.message, S._paginate('scheduled', '', rows) if rows else S.ui_info('none'))
 
-    @commands.command(name="scheduleclear", brief="Clear scheduled messages")
+    @commands.command(name='scheduleclear', brief='Clear scheduled messages')
     async def scheduleclear(self, ctx):
         S._scheduler.clear()
-        await ctx.message.edit(content=S.ui_ok("schedule cleared"))
-
+        await S.safe_edit(ctx.message, S.ui_ok('schedule cleared'))
 
     async def _start_bg(self):
-        if not getattr(self, "_need_bg", False):
+        if not getattr(self, '_need_bg', False):
             return
         self._need_bg = False
-        # background work started after ready
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -74,4 +78,5 @@ class SchedulerCog(commands.Cog, name="scheduler"):
         except Exception:
             pass
 
-async def setup(bot): await bot.add_cog(SchedulerCog(bot))
+async def setup(bot):
+    await bot.add_cog(SchedulerCog(bot))
