@@ -8,7 +8,7 @@ def _ua() -> str:
     return os.environ.get(
         "DISCORD_USER_AGENT",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "discord/1.0.9262 Chrome/155.0.0.0 Electron/36.0.0 Safari/537.36",
     )
 
 def client_properties(override=None):
@@ -19,14 +19,14 @@ def client_properties(override=None):
         "system_locale": os.environ.get("SYSTEM_LOCALE", "en-US"),
         "has_client_mods": False,
         "browser_user_agent": _ua(),
-        "browser_version": "1.0.9191",
+        "browser_version": "1.0.9262",
         "os_version": "10.0.22631",
         "referrer": "",
         "referring_domain": "",
         "referrer_current": "",
         "referring_domain_current": "",
         "release_channel": "stable",
-        "client_build_number": int(os.environ.get("CLIENT_BUILD_NUMBER", "360032") or 360032),
+        "client_build_number": int(os.environ.get("CLIENT_BUILD_NUMBER", "630444") or 630444),
         "client_event_source": None,
         "client_launch_id": os.environ.get("CLIENT_LAUNCH_ID", "wilt-launch"),
         "launch_signature": os.environ.get("LAUNCH_SIGNATURE", "wilt-sig"),
@@ -35,7 +35,7 @@ def client_properties(override=None):
         "os_arch": "x64",
         "app_arch": "x64",
         "native_build_number": None,
-        "client_version": "1.0.9191",
+        "client_version": "1.0.9262",
     }
     if isinstance(override, dict):
         props.update(override)
@@ -59,7 +59,7 @@ def default_headers(token: str, props=None) -> dict:
         "Accept-Language": "en-US,en;q=0.9",
         "Origin": "https://discord.com",
         "Referer": "https://discord.com/channels/@me",
-        "Sec-Ch-Ua": '"Chromium";v="131", "Not_A Brand";v="24"',
+        "Sec-Ch-Ua": '"Chromium";v="155", "Not_A Brand";v="24"',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Sec-Fetch-Dest": "empty",
@@ -127,6 +127,7 @@ def install_ws_identify_patch(props=None) -> bool:
                             except Exception:
                                 pass
                             d["properties"] = use
+                            d["client_properties"] = use
                             data = dict(data)
                             data["d"] = d
                 except Exception:
