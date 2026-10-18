@@ -48,7 +48,7 @@ _load_custom_presets()
 
 INLINE_KEYS = ['name', 'details', 'state', 'type', 'timestamp', 'platform', 'large_image_text', 'large_image', 'small_image', 'btn1', 'btn2']
 
-class RPCCog(commands.Cog, name='Rich Presence'):
+class RPCCog(commands.Cog, name='rpc'):
 
     def __init__(self, bot):
         self.bot = bot
@@ -230,7 +230,7 @@ class RPCCog(commands.Cog, name='Rich Presence'):
                 if not v:
                     continue
                 v = str(v).strip()
-                if v.startswith('http://') or v.startswith('https://') or v.startswith('mp:attachments/'):
+                if v.startswith('http://') or v.startswith('https://') or v.startswith('mp:attachments/') or 'imgur.com' in v or 'cdn.discordapp.com' in v or 'media.discordapp.net' in v:
                     a['application_id'] = default_app
                     slot_app = default_app
                     try:
@@ -593,7 +593,7 @@ class RPCCog(commands.Cog, name='Rich Presence'):
             return None
         try:
             timeout = aiohttp.ClientTimeout(total=25)
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/139.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*'}
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/155.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*'}
             async with aiohttp.ClientSession() as session:
                 async with session.get(image_url, headers=headers, timeout=timeout) as r:
                     if r.status != 200:

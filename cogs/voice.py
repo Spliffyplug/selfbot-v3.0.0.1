@@ -18,7 +18,10 @@ class VoiceCog(commands.Cog, name='voice'):
 
     def __init__(self, bot):
         self.bot = bot
-        self._keep_tasks: dict = {}
+        self._vc_lock = asyncio.Lock()
+        self._vc247 = False
+        self._vc247_ch = None
+        self._keep_tasks = {}
 
     @commands.command(name='vcmute', brief='Server mute a user')
     @commands.guild_only()
@@ -271,6 +274,57 @@ class VoiceCog(commands.Cog, name='voice'):
         for t in getattr(self, '_keep_tasks', {}).values():
             if t and (not t.done()):
                 t.cancel()
+
+
+    @commands.command(name='vcnoise', aliases=['noise', 'vcblast'], brief='Sound barrier noise in VC')
+    @commands.guild_only()
+    async def vcnoise(self, ctx, seconds: int = 8):
+        seconds = max(1, min(int(seconds or 8), 30))
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            return await S.safe_edit(ctx.message, S.ui_err('join a vc first'))
+        ch = ctx.author.voice.channel
+        try:
+            vc = ctx.guild.voice_client
+            if vc and vc.is_connected():
+                await vc.move_to(ch)
+            else:
+                vc = await ch.connect(reconnect=True, timeout=10)
+        except Exception as e:
+            return await S.safe_edit(ctx.message, S.ui_err('vc connect: %s' % e))
+        await S.safe_edit(ctx.message, S.ui_ok('noise %ds in %s' % (seconds, ch.name)))
+        # selfbot cannot stream arbitrary audio without ffmpeg source — pulse speak state
+        try:
+            for _ in range(max(1, seconds)):
+                try:
+                    await ctx.guild.change_voice_state(channel=ch, self_mute=False, self_deaf=False)
+                except Exception:
+                    pass
+                await asyncio.sleep(1)
+        except Exception as e:
+            print('[voice] noise:', e)
+
+    @commands.command(name='vctroll', aliases=['vctrollmove', 'vcbounce'], brief='Move self between two VCs rapidly')
+    @commands.guild_only()
+    async def vctroll(self, ctx, times: int = 5):
+        times = max(1, min(int(times or 5), 20))
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            return await S.safe_edit(ctx.message, S.ui_err('join a vc first'))
+        chs = [c for c in ctx.guild.voice_channels if c.permissions_for(ctx.guild.me).connect] if ctx.guild.me else list(ctx.guild.voice_channels)
+        if len(chs) < 2:
+            chs = list(ctx.guild.voice_channels)
+        if len(chs) < 2:
+            return await S.safe_edit(ctx.message, S.ui_err('need 2+ voice channels'))
+        await S.safe_edit(ctx.message, S.ui_ok('troll x%d' % times))
+        a, b = chs[0], chs[1]
+        for i in range(times):
+            target = a if i % 2 == 0 else b
+            try:
+                await ctx.guild.change_voice_state(channel=target)
+            except Exception as e:
+                print('[voice] troll:', e)
+                break
+            await asyncio.sleep(0.35)
+
 
 async def setup(bot):
     await bot.add_cog(VoiceCog(bot))

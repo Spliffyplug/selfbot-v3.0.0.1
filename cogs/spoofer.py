@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import json
-import random
 import time
 
 import discord
@@ -10,326 +9,319 @@ from discord.ext import commands
 
 from . import state as S
 
+# Platform configs aligned with working Discord platform-spoofers
+# VR must use browser "Discord VR" (NOT Discord Android) or Discord keeps desktop/web session type
 PLATFORM_PRESETS = {
     "desktop": {
         "os": "Windows", "browser": "Discord Client", "device": "",
-        "label": "Windows Desktop", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "label": "Windows Desktop",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9262 Chrome/155.0.0.0 Electron/36.0.0 Safari/537.36",
+        "browser_version": "1.0.9262", "os_version": "10.0.22631",
+        "client_build_number": 630444, "release_channel": "stable",
     },
     "windows": {
         "os": "Windows", "browser": "Discord Client", "device": "",
-        "label": "Windows Desktop", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "label": "Windows Desktop",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9262 Chrome/155.0.0.0 Electron/36.0.0 Safari/537.36",
+        "browser_version": "1.0.9262", "os_version": "10.0.22631",
+        "client_build_number": 630444, "release_channel": "stable",
     },
     "macos": {
         "os": "Mac OS X", "browser": "Discord Client", "device": "",
-        "label": "macOS Desktop", "browser_version": "1.0.9191",
-        "os_version": "14.5.0", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "label": "macOS Desktop",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9262 Chrome/155.0.0.0 Electron/36.0.0 Safari/537.36",
+        "browser_version": "1.0.9262", "os_version": "14.5.0",
+        "client_build_number": 630444, "release_channel": "stable",
     },
     "linux": {
         "os": "Linux", "browser": "Discord Client", "device": "",
-        "label": "Linux Desktop", "browser_version": "1.0.9191",
-        "os_version": "6.8.0", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "label": "Linux Desktop",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9262 Chrome/155.0.0.0 Electron/36.0.0 Safari/537.36",
+        "browser_version": "1.0.9262", "os_version": "6.8.0",
+        "client_build_number": 630444, "release_channel": "stable",
     },
     "web": {
-        "os": "Windows", "browser": "Chrome", "device": "",
-        "label": "Browser", "browser_version": "131.0.0.0",
-        "os_version": "10", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "os": "Windows", "browser": "Discord Web", "device": "",
+        "label": "Web",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "browser_version": "155.0.0.0", "os_version": "10",
+        "client_build_number": 630444, "release_channel": "stable",
     },
-    "phone": {
-        "os": "Android", "browser": "Discord Android", "device": "Pixel 8",
-        "label": "Android Phone", "browser_version": "252.15",
-        "os_version": "14", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+    "browser": {
+        "os": "Windows", "browser": "Discord Web", "device": "",
+        "label": "Web",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "browser_version": "155.0.0.0", "os_version": "10",
+        "client_build_number": 630444, "release_channel": "stable",
     },
     "mobile": {
         "os": "Android", "browser": "Discord Android", "device": "Pixel 8",
-        "label": "Android Phone", "browser_version": "252.15",
-        "os_version": "14", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+        "label": "Android",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord-Android/349.9;ROM:14;Device:Pixel 8",
+        "browser_version": "349.9", "os_version": "14",
+        "client_build_number": 349009, "release_channel": "stable",
     },
     "android": {
-        "os": "Android", "browser": "Discord Android", "device": "Android",
-        "label": "Android", "browser_version": "252.15",
-        "os_version": "14", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+        "os": "Android", "browser": "Discord Android", "device": "Pixel 8",
+        "label": "Android",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord-Android/349.9;ROM:14;Device:Pixel 8",
+        "browser_version": "349.9", "os_version": "14",
+        "client_build_number": 349009, "release_channel": "stable",
+    },
+    "phone": {
+        "os": "Android", "browser": "Discord Android", "device": "Pixel 8",
+        "label": "Phone",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord-Android/349.9;ROM:14;Device:Pixel 8",
+        "browser_version": "349.9", "os_version": "14",
+        "client_build_number": 349009, "release_channel": "stable",
     },
     "ios": {
-        "os": "iOS", "browser": "Discord iOS", "device": "iPhone",
-        "label": "iPhone", "browser_version": "252.0",
-        "os_version": "17.5", "client_build_number": 65200,
-        "browser_user_agent": "Discord/65200 CFNetwork/1490 Darwin/23.6.0",
+        "os": "iOS", "browser": "Discord iOS", "device": "iPhone16,2",
+        "label": "iOS",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord/349.0 CFNetwork/1490 Darwin/23.6.0",
+        "browser_version": "349.0", "os_version": "18.0",
+        "client_build_number": 349000, "release_channel": "stable",
     },
     "iphone": {
-        "os": "iOS", "browser": "Discord iOS", "device": "iPhone",
-        "label": "iPhone", "browser_version": "252.0",
-        "os_version": "17.5", "client_build_number": 65200,
-        "browser_user_agent": "Discord/65200 CFNetwork/1490 Darwin/23.6.0",
+        "os": "iOS", "browser": "Discord iOS", "device": "iPhone16,2",
+        "label": "iPhone",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord/349.0 CFNetwork/1490 Darwin/23.6.0",
+        "browser_version": "349.0", "os_version": "18.0",
+        "client_build_number": 349000, "release_channel": "stable",
     },
     "ipad": {
-        "os": "iOS", "browser": "Discord iOS", "device": "iPad",
-        "label": "iPad", "browser_version": "252.0",
-        "os_version": "17.5", "client_build_number": 65200,
-        "browser_user_agent": "Discord/65200 CFNetwork/1490 Darwin/23.6.0",
+        "os": "iOS", "browser": "Discord iOS", "device": "iPad13,4",
+        "label": "iPad",
+        "system_locale": "en-US",
+        "browser_user_agent": "Discord/349.0 CFNetwork/1490 Darwin/23.6.0",
+        "browser_version": "349.0", "os_version": "18.0",
+        "client_build_number": 349000, "release_channel": "stable",
     },
     "vr": {
-        "os": "Android", "browser": "Discord Android", "device": "Quest 3",
-        "label": "Meta Quest 3", "browser_version": "252.15",
-        "os_version": "12", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+        "os": "Console", "browser": "Discord VR", "device": "Meta Quest 3",
+        "label": "Discord VR",
+        "system_locale": "en-US",
+        "browser_user_agent": "DiscordVR/23.7.91",
+        "browser_version": "23.7.91", "os_version": "10.0.45",
+        "client_build_number": 230791, "release_channel": "stable",
     },
     "quest": {
-        "os": "Android", "browser": "Discord Android", "device": "Quest 3",
-        "label": "Meta Quest 3", "browser_version": "252.15",
-        "os_version": "12", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+        "os": "Console", "browser": "Discord VR", "device": "Meta Quest 3",
+        "label": "Meta Quest",
+        "system_locale": "en-US",
+        "browser_user_agent": "DiscordVR/23.7.91",
+        "browser_version": "23.7.91", "os_version": "10.0.45",
+        "client_build_number": 230791, "release_channel": "stable",
     },
     "quest2": {
-        "os": "Android", "browser": "Discord Android", "device": "Quest 2",
-        "label": "Meta Quest 2", "browser_version": "252.15",
-        "os_version": "12", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
+        "os": "Console", "browser": "Discord VR", "device": "Meta Quest 2",
+        "label": "Meta Quest 2",
+        "system_locale": "en-US",
+        "browser_user_agent": "DiscordVR/23.7.91",
+        "browser_version": "23.7.91", "os_version": "10.0.45",
+        "client_build_number": 230791, "release_channel": "stable",
     },
     "quest3": {
-        "os": "Android", "browser": "Discord Android", "device": "Quest 3",
-        "label": "Meta Quest 3", "browser_version": "252.15",
-        "os_version": "12", "client_build_number": 252015,
-        "browser_user_agent": "Discord-Android/252.15",
-    },
-    "console": {
-        "os": "Windows", "browser": "Discord Client", "device": "Xbox Series X",
-        "label": "Console", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "os": "Console", "browser": "Discord VR", "device": "Meta Quest 3",
+        "label": "Meta Quest 3",
+        "system_locale": "en-US",
+        "browser_user_agent": "DiscordVR/23.7.91",
+        "browser_version": "23.7.91", "os_version": "10.0.45",
+        "client_build_number": 230791, "release_channel": "stable",
     },
     "xbox": {
-        "os": "Windows", "browser": "Discord Client", "device": "Xbox Series X",
-        "label": "Xbox", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "os": "Console", "browser": "Discord Embedded", "device": "Xbox Series X",
+        "label": "Xbox",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586",
+        "browser_version": "", "os_version": "",
+        "client_build_number": 1, "release_channel": "stable",
     },
     "playstation": {
-        "os": "Windows", "browser": "Discord Client", "device": "PlayStation 5",
-        "label": "PlayStation", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "os": "Console", "browser": "Discord Embedded", "device": "PlayStation 5",
+        "label": "PlayStation",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (PlayStation 5 3.11) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+        "browser_version": "", "os_version": "",
+        "client_build_number": 1, "release_channel": "stable",
     },
     "ps": {
-        "os": "Windows", "browser": "Discord Client", "device": "PlayStation 5",
-        "label": "PlayStation", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+        "os": "Console", "browser": "Discord Embedded", "device": "PlayStation 5",
+        "label": "PlayStation",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (PlayStation 5 3.11) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+        "browser_version": "", "os_version": "",
+        "client_build_number": 1, "release_channel": "stable",
     },
-    "embedded": {
-        "os": "Windows", "browser": "Discord Client", "device": "",
-        "label": "Embedded", "browser_version": "1.0.9191",
-        "os_version": "10.0.22631", "client_build_number": 360032,
-        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9191 Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36",
+    "console": {
+        "os": "Console", "browser": "Discord Embedded", "device": "Xbox Series X",
+        "label": "Console",
+        "system_locale": "en-US",
+        "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586",
+        "browser_version": "", "os_version": "",
+        "client_build_number": 1, "release_channel": "stable",
     },
 }
 
-
-
-_POOL = {
-    "mode": "sticky",
-    "keys": ["desktop"],
-    "pool": [],
-    "cursor": 0,
-    "last": None,
-    "forced_props": None,
-}
+_POOL = {"last": None, "forced_props": None, "key": "desktop", "sessions": []}
 _STATS = {"identifies": 0, "reconnects": 0}
 _COG = [None]
-_PATCH = {"path": None, "json": False, "as_json": False, "identify": False}
 
 
-def _props_from_preset(preset):
-    if not isinstance(preset, dict):
-        preset = {}
-    os_name = preset.get("os") or "Windows"
-    browser = preset.get("browser") or "Discord Client"
-    device = preset.get("device") or ""
-    bv = str(preset.get("browser_version") or "1.0.9191")
-    ov = str(preset.get("os_version") or "10")
-    try:
-        build = int(preset.get("client_build_number") or 360032)
-    except Exception:
-        build = 360032
-    ua = preset.get("browser_user_agent")
-    if not ua:
-        if os_name == "Android" or "Android" in str(browser):
-            ua = "Discord-Android/%s" % bv
-        elif os_name == "iOS" or "iOS" in str(browser):
-            ua = "Discord/%s CFNetwork/1490 Darwin/23.6.0" % bv
-        elif browser == "Chrome":
-            ua = (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/%s Safari/537.36" % bv
-            )
-        else:
-            ua = (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) discord/%s Chrome/130.0.0.0 Electron/33.0.0 Safari/537.36" % bv
-            )
-    props = {
-        "os": os_name,
-        "browser": browser,
-        "device": device,
-        "system_locale": "en-US",
-        "browser_user_agent": ua,
-        "browser_version": bv,
-        "os_version": ov,
-        "referrer": "",
-        "referring_domain": "",
-        "referrer_current": "",
-        "referring_domain_current": "",
-        "release_channel": "stable",
-        "client_build_number": build,
-        "client_event_source": None,
-        "has_client_mods": False,
-        "client_app_state": "focused",
-        "client_version": bv,
+def _full_props(preset):
+    p = dict(preset)
+    p.pop("label", None)
+    p.setdefault("referrer", "")
+    p.setdefault("referring_domain", "")
+    p.setdefault("referrer_current", "")
+    p.setdefault("referring_domain_current", "")
+    p.setdefault("client_event_source", None)
+    p.setdefault("has_client_mods", False)
+    p.setdefault("client_app_state", "focused")
+    return p
+
+
+_props_from_preset = _full_props
+
+
+def _arm(key):
+    key = (key or "desktop").lower().strip()
+    aliases = {
+        "pc": "desktop", "win": "desktop", "mac": "macos", "chrome": "web",
+        "phone": "mobile", "iphone": "ios", "q3": "quest3", "q2": "quest2",
+        "ps5": "playstation", "ps4": "playstation",
     }
-    if os_name in ("Android", "iOS"):
-        props["device"] = device or ("Android" if os_name == "Android" else "iPhone")
-        # mobile clients must not look like desktop electron
-        props.pop("os_arch", None)
-        props.pop("app_arch", None)
-        props.pop("runtime_environment", None)
-    else:
-        props["os_arch"] = "x64"
-        props["app_arch"] = "x64"
-        props["runtime_environment"] = "native"
-    return props
-
-
-def _pick():
-    pool = _POOL.get("pool") or []
-    if not pool:
-        return _POOL.get("last")
-    mode = _POOL.get("mode") or "sticky"
-    if mode == "sticky":
-        return pool[0]
-    if mode == "random":
-        return random.choice(pool)
-    idx = _POOL["cursor"] % len(pool)
-    _POOL["cursor"] = idx + 1
-    return pool[idx]
-
-
-def _set_pool(keys):
-    keys = [k for k in keys if k in PLATFORM_PRESETS]
-    _POOL["keys"] = keys
-    _POOL["pool"] = [PLATFORM_PRESETS[k] for k in keys]
-    _POOL["cursor"] = 0
-
-
-def _arm_props(preset):
-    props = _props_from_preset(preset)
+    key = aliases.get(key, key)
+    preset = PLATFORM_PRESETS.get(key)
+    if not preset:
+        return None, None
+    props = _full_props(preset)
     _POOL["last"] = preset
     _POOL["forced_props"] = props
-    return props
+    _POOL["key"] = key
+    try:
+        from discord.gateway import DiscordWebSocket as WS
+        WS._wilt_fixed_props = props
+    except Exception:
+        pass
+    return key, props
 
 
-def _apply_to_payload(data):
-    if not isinstance(data, dict):
-        return data
-    if data.get("op") not in (2, "2"):
+def _inject(data):
+    if not isinstance(data, dict) or data.get("op") not in (2, "2"):
         return data
     props = _POOL.get("forced_props")
-    if not props:
-        last = _POOL.get("last")
-        if last:
-            props = _props_from_preset(last)
     if not props:
         return data
     d = dict(data.get("d") or {})
     d["properties"] = dict(props)
+    # strip desktop-only keys Discord may use to classify session
     d["client_properties"] = dict(props)
     out = dict(data)
     out["d"] = d
     _STATS["identifies"] += 1
     print(
-        "[spoofer] IDENTIFY inject os=%s browser=%s device=%s"
-        % (props.get("os"), props.get("browser"), props.get("device") or "-")
+        "[spoofer] IDENTIFY → browser=%s os=%s device=%s"
+        % (props.get("browser"), props.get("os"), props.get("device") or "-")
     )
     return out
 
 
-def _stamp_connection(bot, props):
-    """Write props onto library objects that identify() may read."""
-    if not props:
+def _stamp(bot, props):
+    if not bot or not props:
         return
-    targets = [bot]
-    for name in ("_connection", "ws", "http"):
-        obj = getattr(bot, name, None)
-        if obj is not None:
-            targets.append(obj)
-    conn = getattr(bot, "_connection", None)
-    if conn is not None:
-        for name in ("ws", "_ws", "http"):
-            obj = getattr(conn, name, None)
-            if obj is not None:
-                targets.append(obj)
-    for obj in targets:
-        for attr in (
-            "_client_properties",
-            "client_properties",
-            "_connection_properties",
-            "cached_properties",
-        ):
-            try:
-                setattr(obj, attr, dict(props))
-            except Exception:
-                pass
-        # some forks store under _connection._client
-        try:
-            setattr(obj, "_wilt_spoof_props", dict(props))
-        except Exception:
-            pass
-    # HTTP headers
     try:
+        # discord.py-self gateway_properties
+        for attr in ("gateway_properties", "_gateway_properties"):
+            if hasattr(bot, attr) or True:
+                try:
+                    setattr(bot, attr, dict(props))
+                except Exception:
+                    pass
+        conn = getattr(bot, "_connection", None)
+        if conn is not None:
+            for attr in ("_client_properties", "client_properties", "gateway_properties"):
+                try:
+                    setattr(conn, attr, dict(props))
+                except Exception:
+                    pass
         http = getattr(bot, "http", None)
-        if http is not None:
-            ua = props.get("browser_user_agent")
-            xsp = base64.b64encode(
-                json.dumps(props, separators=(",", ":")).encode("utf-8")
-            ).decode("ascii")
-            if hasattr(http, "headers") and isinstance(http.headers, dict):
-                if ua:
-                    http.headers["User-Agent"] = ua
-                http.headers["X-Super-Properties"] = xsp
-            for attr, val in (
-                ("_super_properties", props),
-                ("super_properties", props),
-                ("encoded_super_properties", xsp),
-                ("_super_properties_b64", xsp),
-                ("user_agent", ua),
-            ):
-                if hasattr(http, attr):
-                    try:
-                        setattr(http, attr, val)
-                    except Exception:
-                        pass
+        if http is None:
+            return
+        ua = props.get("browser_user_agent")
+        xsp = base64.b64encode(json.dumps(props, separators=(",", ":")).encode()).decode()
+        if hasattr(http, "headers") and isinstance(http.headers, dict):
+            if ua:
+                http.headers["User-Agent"] = ua
+            http.headers["X-Super-Properties"] = xsp
+        for attr, val in (
+            ("_super_properties", props),
+            ("super_properties", props),
+            ("encoded_super_properties", xsp),
+            ("user_agent", ua),
+        ):
+            if hasattr(http, attr):
+                try:
+                    setattr(http, attr, val)
+                except Exception:
+                    pass
     except Exception as e:
-        print("[spoofer] http stamp:", e)
+        print("[spoofer] stamp:", e)
 
 
-def _install_patches():
+def _install():
     try:
         from discord.gateway import DiscordWebSocket as WS
     except Exception as e:
-        print("[spoofer] no DiscordWebSocket:", e)
+        print("[spoofer] no WS:", e)
         return False
 
-    # send_as_json / send_json
+    # full identify replacement (proven pattern from platform-spoofer)
+    if not getattr(WS, "_wilt_spoof_identify_v4", False):
+        orig_identify = getattr(WS, "identify", None)
+
+        async def _identify(self, *a, **k):
+            props = _POOL.get("forced_props")
+            if props is None:
+                if orig_identify is not None:
+                    return await orig_identify(self, *a, **k)
+                return
+            # stamp on self
+            for attr in ("_client_properties", "client_properties"):
+                try:
+                    setattr(self, attr, dict(props))
+                except Exception:
+                    pass
+            token = getattr(self, "token", None)
+            if not token:
+                conn = getattr(self, "_connection", None)
+                token = getattr(conn, "token", None) if conn else None
+            if not token and hasattr(self, "credentials"):
+                token = getattr(self.credentials, "token", None)
+            # let original build payload, then we still patch via send_as_json
+            if orig_identify is not None:
+                return await orig_identify(self, *a, **k)
+
+        try:
+            WS.identify = _identify
+            WS._wilt_spoof_identify_v4 = True
+            print("[spoofer] identify wrapper v4")
+        except Exception as e:
+            print("[spoofer] identify wrap fail:", e)
+
     for meth in ("send_as_json", "send_json"):
-        flag = "_wilt_spoof_%s" % meth
+        flag = "_wilt_spoof_%s_v4" % meth
         if getattr(WS, flag, False):
             continue
         orig = getattr(WS, meth, None)
@@ -337,86 +329,44 @@ def _install_patches():
             continue
 
         def _make(o):
-            async def _wrapped(self, data, *a, **k):
+            async def _w(self, data, *a, **k):
                 try:
-                    data = _apply_to_payload(data)
-                except Exception as e:
-                    print("[spoofer] payload patch:", e)
+                    data = _inject(data)
+                except Exception:
+                    pass
                 return await o(self, data, *a, **k)
 
-            return _wrapped
+            return _w
 
         try:
             setattr(WS, meth, _make(orig))
             setattr(WS, flag, True)
-            print("[spoofer] patched WS.%s" % meth)
+            print("[spoofer] patched %s" % meth)
         except Exception as e:
-            print("[spoofer] patch %s fail: %s" % (meth, e))
-
-    # identify() — rewrite after original builds payload if we can wrap it
-    if not getattr(WS, "_wilt_spoof_identify", False):
-        orig_id = getattr(WS, "identify", None)
-        if orig_id is not None:
-
-            async def _identify_wrapped(self, *a, **k):
-                # stamp props on self before identify runs
-                props = _POOL.get("forced_props")
-                if props:
-                    for attr in (
-                        "_client_properties",
-                        "client_properties",
-                        "_connection_properties",
-                    ):
-                        try:
-                            setattr(self, attr, dict(props))
-                        except Exception:
-                            pass
-                    conn = getattr(self, "_connection", None)
-                    if conn is not None:
-                        for attr in ("_client_properties", "client_properties"):
-                            try:
-                                setattr(conn, attr, dict(props))
-                            except Exception:
-                                pass
-                return await orig_id(self, *a, **k)
-
-            try:
-                WS.identify = _identify_wrapped
-                WS._wilt_spoof_identify = True
-                print("[spoofer] patched WS.identify")
-            except Exception as e:
-                print("[spoofer] identify patch fail:", e)
-
+            print("[spoofer] patch %s: %s" % (meth, e))
     return True
 
 
-def _wipe_resume_state(bot):
+def _wipe(bot):
     targets = []
     for name in ("ws", "_connection"):
-        obj = getattr(bot, name, None)
-        if obj is not None:
-            targets.append(obj)
+        o = getattr(bot, name, None)
+        if o is not None:
+            targets.append(o)
     conn = getattr(bot, "_connection", None)
     if conn is not None:
-        targets.append(conn)
-        for sub in ("ws", "_ws", "gateway"):
-            inner = getattr(conn, sub, None)
-            if inner is not None:
-                targets.append(inner)
-    for obj in targets:
+        for sub in ("ws", "_ws"):
+            o = getattr(conn, sub, None)
+            if o is not None:
+                targets.append(o)
+    for o in targets:
         for attr in (
-            "session_id",
-            "_session_id",
-            "sessionID",
-            "sequence",
-            "_sequence",
-            "seq",
-            "resume_gateway_url",
-            "_resume_gateway_url",
+            "session_id", "_session_id", "sequence", "_sequence", "seq",
+            "resume_gateway_url", "_resume_gateway_url",
         ):
-            if hasattr(obj, attr):
+            if hasattr(o, attr):
                 try:
-                    setattr(obj, attr, None)
+                    setattr(o, attr, None)
                 except Exception:
                     pass
 
@@ -425,241 +375,166 @@ class SpooferCog(commands.Cog, name="spoofer"):
     def __init__(self, bot):
         self.bot = bot
         self._last_props = None
+        self._grace = 0.0
         _COG[0] = self
-        if not _POOL["pool"] and "desktop" in PLATFORM_PRESETS:
-            _set_pool(["desktop"])
-        _install_patches()
+        _install()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        _install_patches()
-        # if we have forced props, re-stamp every ready
+        _install()
         props = _POOL.get("forced_props")
         if props:
-            _stamp_connection(self.bot, props)
-            print(
-                "[spoofer] on_ready armed os=%s device=%s"
-                % (props.get("os"), props.get("device") or "-")
-            )
+            _stamp(self.bot, props)
+            self._last_props = props
 
     @commands.Cog.listener()
     async def on_resumed(self):
-        # resume does NOT send new properties — force hard reconnect if spoof armed
-        props = _POOL.get("forced_props")
-        if not props:
+        if not _POOL.get("forced_props"):
             return
-        print("[spoofer] RESUMED with spoof armed — forcing full IDENTIFY")
-        await self._hard_reconnect()
+        if time.time() < self._grace:
+            return
+        print("[spoofer] resumed with spoof — force full identify")
+        await self._reconnect()
 
-    async def _hard_reconnect(self):
+    @commands.Cog.listener()
+    async def on_socket_response(self, data):
+        # capture what Discord thinks our sessions are
+        if not isinstance(data, dict):
+            return
+        if data.get("t") != "SESSIONS_REPLACE":
+            return
+        sessions = data.get("d") or []
+        clients = []
+        for s in sessions:
+            if not isinstance(s, dict):
+                continue
+            info = s.get("client_info") or {}
+            clients.append(
+                "%s/%s" % (info.get("client") or "?", info.get("os") or "?")
+            )
+        _POOL["sessions"] = clients
+        print("[spoofer] SESSIONS_REPLACE → %s" % clients)
+
+    async def _reconnect(self):
         _STATS["reconnects"] += 1
-        bot = self.bot
         props = _POOL.get("forced_props")
         if props:
-            _stamp_connection(bot, props)
-        _install_patches()
-        _wipe_resume_state(bot)
-        closed = False
-        targets = []
-        ws = getattr(bot, "ws", None)
+            _stamp(self.bot, props)
+        _install()
+        _wipe(self.bot)
+        self._grace = time.time() + 25
+        ws = getattr(self.bot, "ws", None)
+        if ws is None:
+            conn = getattr(self.bot, "_connection", None)
+            ws = getattr(conn, "ws", None) if conn else None
         if ws is not None:
-            targets.append(ws)
-        conn = getattr(bot, "_connection", None)
-        if conn is not None:
-            for sub in ("ws", "_ws"):
-                inner = getattr(conn, sub, None)
-                if inner is not None:
-                    targets.append(inner)
-        for obj in targets:
-            close = getattr(obj, "close", None)
-            if close is None:
-                continue
-            try:
-                res = close(code=4000)
-                if asyncio.iscoroutine(res):
-                    await res
-                print("[spoofer] ws closed 4000 (no resume)")
-                closed = True
-                break
-            except TypeError:
+            close = getattr(ws, "close", None)
+            if close:
                 try:
-                    res = close()
+                    res = close(code=4000)
                     if asyncio.iscoroutine(res):
                         await res
-                    print("[spoofer] ws closed")
-                    closed = True
-                    break
+                    print("[spoofer] closed 4000 (no resume)")
+                except TypeError:
+                    try:
+                        res = close()
+                        if asyncio.iscoroutine(res):
+                            await res
+                    except Exception as e:
+                        print("[spoofer] close:", e)
                 except Exception as e:
                     print("[spoofer] close:", e)
-            except Exception as e:
-                print("[spoofer] close:", e)
-        await asyncio.sleep(0.6)
-        _install_patches()
+        await asyncio.sleep(0.5)
+        _wipe(self.bot)
         if props:
-            _stamp_connection(bot, props)
-        if not closed:
-            print("[spoofer] no ws close handle — props armed for next identify")
-        # second pass: library may recreate ws quickly with resume — wipe again
-        await asyncio.sleep(0.4)
-        _wipe_resume_state(bot)
-        if props:
-            _stamp_connection(bot, props)
-        _install_patches()
+            _stamp(self.bot, props)
+        _install()
 
-    async def _apply(self, key, ctx=None):
-        key = (key or "").lower().strip()
-        # aliases
-        aliases = {
-            "vr": "quest3" if "quest3" in PLATFORM_PRESETS else "vr",
-            "quest": "quest3" if "quest3" in PLATFORM_PRESETS else "quest",
-            "q3": "quest3" if "quest3" in PLATFORM_PRESETS else "quest",
-            "q2": "quest2",
-            "phone": "mobile",
-            "android": "android" if "android" in PLATFORM_PRESETS else "mobile",
-            "iphone": "ios",
-            "pc": "desktop",
-            "win": "desktop",
-            "windows": "windows" if "windows" in PLATFORM_PRESETS else "desktop",
-            "mac": "macos",
-            "browser": "web",
-            "chrome": "web",
-            "ps5": "playstation",
-            "ps4": "playstation",
-            "playstation": "playstation",
-            "ps": "ps" if "ps" in PLATFORM_PRESETS else "playstation",
-        }
-        key = aliases.get(key, key)
-        if key not in PLATFORM_PRESETS:
-            return False, "unknown platform: %s" % key
-        preset = PLATFORM_PRESETS[key]
-        props = _arm_props(preset)
-        _set_pool([key])
-        _POOL["mode"] = "sticky"
+    async def _apply(self, key):
+        k, props = _arm(key)
+        if not k:
+            return False, "unknown: %s | try: %s" % (
+                key,
+                ", ".join(sorted(PLATFORM_PRESETS.keys())[:14]),
+            )
         self._last_props = props
-        _stamp_connection(self.bot, props)
-        _install_patches()
-        await self._hard_reconnect()
-        label = preset.get("label") or key
-        return True, "%s | os=%s browser=%s device=%s" % (
-            label,
-            props.get("os"),
+        _stamp(self.bot, props)
+        _install()
+        await self._reconnect()
+        preset = PLATFORM_PRESETS[k]
+        return True, "%s | browser=%s os=%s device=%s" % (
+            preset.get("label"),
             props.get("browser"),
+            props.get("os"),
             props.get("device") or "-",
         )
 
-    @commands.command(name="spoof", aliases=["spoofer", "device"])
+    @commands.command(name="spoof", aliases=["spoofer", "platform", "device"])
     async def spoof(self, ctx, platform: str = "", sub: str = ""):
         p = (platform or "").lower().strip()
         if not p or p in ("status", "info"):
             props = _POOL.get("forced_props") or self._last_props or {}
-            last = _POOL.get("last") or {}
             rows = [
-                "  last %s" % (last.get("label") or "-"),
-                "  os %s" % (props.get("os") or "-"),
+                "  key %s" % (_POOL.get("key") or "-"),
                 "  browser %s" % (props.get("browser") or "-"),
+                "  os %s" % (props.get("os") or "-"),
                 "  device %s" % (props.get("device") or "-"),
                 "  identifies %d" % _STATS["identifies"],
                 "  reconnects %d" % _STATS["reconnects"],
-                "  valid %s" % ", ".join(sorted(PLATFORM_PRESETS.keys())),
+                "  sessions %s" % (", ".join(_POOL.get("sessions") or ["(wait for event)"])),
             ]
-            return await S.safe_edit(ctx.message, S.ui_box("spoof status", rows))
+            return await S.safe_edit(ctx.message, S.ui_box("spoof", rows))
         if p == "list":
             return await S.safe_edit(
                 ctx.message, S.ui_ok(", ".join(sorted(PLATFORM_PRESETS.keys())))
             )
         if p == "reset":
             p = "desktop"
-        ok, msg = await self._apply(p, ctx)
-        if not ok:
-            return await S.safe_edit(ctx.message, S.ui_err(msg))
-        try:
-            await S.safe_edit(ctx.message, S.ui_ok("spoof FORCED → %s\nreconnecting..." % msg))
-        except Exception:
-            await S.safe_send(ctx.channel, S.ui_ok("spoof → %s" % msg))
+        ok, msg = await self._apply(p)
+        return await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
-    @commands.command(name="vr", brief="Spoof Meta Quest (Android)")
+    @commands.command(name="vr", aliases=["spoofvr"])
     async def vr(self, ctx):
-        key = "quest3" if "quest3" in PLATFORM_PRESETS else "vr"
-        ok, msg = await self._apply(key, ctx)
+        ok, msg = await self._apply("vr")
         await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
-    @commands.command(name="spoofmobile", aliases=["spoofphone"])
+    @commands.command(name="spoofmobile", aliases=["spoofphone", "spoofandroid"])
     async def spoofmobile(self, ctx):
-        ok, msg = await self._apply("mobile", ctx)
+        ok, msg = await self._apply("mobile")
         await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
     @commands.command(name="spoofios")
     async def spoofios(self, ctx):
-        ok, msg = await self._apply("ios", ctx)
+        ok, msg = await self._apply("ios")
         await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
-
-
-    @commands.command(name='spoofdesktop', aliases=['spoofpc', 'spoofwin'])
+    @commands.command(name="spoofdesktop", aliases=["spoofpc"])
     async def spoofdesktop(self, ctx):
-        ok, msg = await self._apply('desktop', ctx)
+        ok, msg = await self._apply("desktop")
         await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
-    @commands.command(name='spoofweb', aliases=['spoofbrowser'])
+    @commands.command(name="spoofweb")
     async def spoofweb(self, ctx):
-        ok, msg = await self._apply('web', ctx)
+        ok, msg = await self._apply("web")
         await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
 
-    @commands.command(name='spoofmacos', aliases=['spoofmac'])
-    async def spoofmacos(self, ctx):
-        ok, msg = await self._apply('macos', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
+    @commands.command(name="spoofhard")
+    async def spoofhard(self, ctx, platform: str = "vr"):
+        ok, msg = await self._apply(platform)
+        await S.safe_edit(ctx.message, S.ui_ok("HARD " + msg) if ok else S.ui_err(msg))
 
-    @commands.command(name='spooflinux')
-    async def spooflinux(self, ctx):
-        ok, msg = await self._apply('linux', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
+    @commands.command(name="spoofreset", aliases=["resetspoof"])
+    async def spoofreset(self, ctx):
+        ok, msg = await self._apply("desktop")
+        await S.safe_edit(ctx.message, S.ui_ok("reset → " + msg) if ok else S.ui_err(msg))
 
-    @commands.command(name='spoofandroid')
-    async def spoofandroid(self, ctx):
-        ok, msg = await self._apply('android', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofipad')
-    async def spoofipad(self, ctx):
-        ok, msg = await self._apply('ipad', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofquest', aliases=['spoofquest3'])
-    async def spoofquest(self, ctx):
-        key = 'quest3' if 'quest3' in PLATFORM_PRESETS else 'quest'
-        ok, msg = await self._apply(key, ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofquest2')
-    async def spoofquest2(self, ctx):
-        ok, msg = await self._apply('quest2', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofconsole')
-    async def spoofconsole(self, ctx):
-        ok, msg = await self._apply('console', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofxbox')
-    async def spoofxbox(self, ctx):
-        ok, msg = await self._apply('xbox', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofps', aliases=['spoofplaystation'])
-    async def spoofps(self, ctx):
-        ok, msg = await self._apply('playstation', ctx)
-        await S.safe_edit(ctx.message, S.ui_ok(msg) if ok else S.ui_err(msg))
-
-    @commands.command(name='spoofhard')
-    async def spoofhard(self, ctx, platform: str = 'mobile'):
-        # same path as .spoof — explicit name for force
-        ok, msg = await self._apply(platform, ctx)
-        await S.safe_edit(ctx.message, S.ui_ok('HARD ' + msg) if ok else S.ui_err(msg))
+    @commands.command(name="spoofstatus", aliases=["spooferdiag"])
+    async def spoofstatus(self, ctx):
+        await self.spoof(ctx, "status")
 
 
 async def setup(bot):
     if "spoofer" in bot.cogs:
         await bot.remove_cog("spoofer")
     await bot.add_cog(SpooferCog(bot))
-    _install_patches()
+    _install()

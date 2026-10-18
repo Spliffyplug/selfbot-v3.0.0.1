@@ -384,8 +384,9 @@ class AutoCog(commands.Cog, name='auto'):
                 t.cancel()
             return await S.safe_edit(ctx.message, S.ui_ok('server name rotation stopped'))
         parts = [p.strip() for p in names.replace('|', ',').split(',') if p.strip()]
+        parts = [p[:100] for p in parts if len(p) >= 2]
         if len(parts) < 2:
-            return await S.safe_edit(ctx.message, S.ui_err('usage: rotateservername name1, name2'))
+            return await S.safe_edit(ctx.message, S.ui_err('usage: rotateservername name1, name2 (each 2-100 chars)'))
         if not hasattr(self, '_sname_rot_tasks'):
             self._sname_rot_tasks = {}
         old = self._sname_rot_tasks.get(ctx.guild.id)
@@ -398,7 +399,11 @@ class AutoCog(commands.Cog, name='auto'):
             delay = 2.0
             while True:
                 try:
-                    await guild.edit(name=parts[i % len(parts)][:100])
+                    nm = parts[i % len(parts)][:100]
+                    if len(nm) < 2:
+                        i += 1
+                        continue
+                    await guild.edit(name=nm)
                     delay = 2.0
                 except Exception as e:
                     msg = str(e).lower()

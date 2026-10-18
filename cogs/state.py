@@ -25,8 +25,8 @@ PREFIX = '.'
 STEALTH_DELETE = True
 STEALTH_DELETE_SECONDS = 5
 DISCORD_MSG_LIMIT = 2000
-VERSION = '3.0.4(beta)'
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+VERSION = '3.2.8'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36'
 try:
     from utils.gateway import encode_super_properties as _enc_xsp
     X_SUPER_PROPERTIES = _enc_xsp()
@@ -261,3 +261,30 @@ def ensure_prefix() -> str:
     if not isinstance(PREFIX, str) or not PREFIX:
         PREFIX = '.'
     return PREFIX
+
+def ensure_filters():
+    base = {
+        'spam': {'enabled': False, 'threshold': 5, 'window': 5, 'history': {}},
+        'duplicate': {'enabled': False, 'window': 30, 'history': {}},
+        'link': {'enabled': False, 'whitelist': set()},
+        'invite': {'enabled': False},
+        'attachment': {'enabled': False},
+        'nsfw': {'enabled': False, 'keywords': set()},
+        'mention_spam': {'enabled': False, 'threshold': 5},
+        'mass_ping': {'enabled': False},
+        'scam': {'enabled': False},
+        'bot': {'enabled': False},
+        'webhook': {'enabled': False},
+        'auto_purge': {'enabled': False},
+        'actions_log': [],
+        'log_channel': None,
+    }
+    if not isinstance(filters, dict):
+        return base
+    for k, v in base.items():
+        if k not in filters:
+            filters[k] = v
+        elif isinstance(v, dict) and isinstance(filters[k], dict):
+            for kk, vv in v.items():
+                filters[k].setdefault(kk, vv)
+    return filters

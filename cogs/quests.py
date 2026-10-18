@@ -107,6 +107,8 @@ class Quest:
 class Quests(commands.Cog, name='quests'):
 
     def __init__(self, bot):
+        self.quests = []
+        self.auto_complete = False
         self.bot = bot
         self.quests: dict[str, Quest] = {}
         self.auto_complete = False
