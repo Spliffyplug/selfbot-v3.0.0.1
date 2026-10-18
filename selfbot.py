@@ -53,12 +53,6 @@ from pathlib import Path
 load_dotenv()
 load_dotenv('.env')
 load_dotenv('/home/container/.env')
-try:
-    from utils.ms_install import ensure_modifyself
-    ensure_modifyself(log=print)
-except Exception as _ms_e:
-    print(f'[modifyself] auto-install skip: {_ms_e}')
-
 def _load_cfg():
     try:
         with open('config.json', encoding='utf-8') as f:
@@ -127,7 +121,7 @@ def _load_token():
             return t
     return ''
 TOKEN = _load_token()
-VERSION = '3.3.1'
+VERSION = '3.2.8'
 ESC = '\x1b'
 RESET = f'{ESC}[0m'
 GREY = f'{ESC}[2;37m'
@@ -335,6 +329,8 @@ class WiltBot(commands.Bot):
             pass
         if isinstance(error, commands.CommandNotFound):
             return
+        if isinstance(error, (commands.CheckFailure, commands.DisabledCommand)):
+            return
         if isinstance(error, commands.CommandOnCooldown):
             try:
                 return await ctx.message.edit(content=f'```ansi\n  \x1b[31m✗\x1b[0m  cooldown: {error.retry_after:.1f}s\n```')
@@ -456,31 +452,38 @@ class WiltBot(commands.Bot):
             return
         await super().process_commands(message)
 client = WiltBot()
-CATEGORY_ORDER = ['general', 'quests', 'sniper', 'afk', 'rpc', 'spoofer', 'status', 'social', 'profile', 'auto', 'voice', 'server', 'mass', 'search', 'fun', 'pack', 'utility', 'tools', 'settings', 'meta', 'host', 'bot', 'filters', 'loggers', 'tracking', 'reminders', 'guards', 'rolemgmt', 'information', 'nuke', 'developer', 'themes', 'multispoof', 'gc', 'webhooks', 'ai', 'downloads', 'protect']
-CATEGORY_SHORT = {'general': 'core', 'quests': 'quests', 'sniper': 'snipe', 'afk': 'afk', 'rpc': 'rpc', 'spoofer': 'spoof', 'status': 'status', 'social': 'social', 'profile': 'profile', 'profile_ext': 'profile+', 'auto': 'auto', 'autoresponder': 'ar', 'voice': 'voice', 'server': 'server', 'mass': 'mass', 'search': 'search', 'fun': 'fun', 'pack': 'pack', 'utility': 'util', 'tools': 'tools', 'settings': 'cfg', 'meta': 'meta', 'host': 'host', 'bot': 'bot', 'filters': 'filter', 'loggers': 'log', 'tracking': 'track', 'reminders': 'remind', 'guards': 'guard', 'rolemgmt': 'roles', 'information': 'info', 'nuke': 'nuke', 'developer': 'dev', 'themes': 'theme', 'multispoof': 'mspoof', 'gc': 'gc', 'webhooks': 'hook', 'ai': 'ai', 'downloads': 'dl', 'protect': 'protect', 'triggers': 'trig', 'pingtrack': 'pings', 'scheduler': 'sched', 'tasks': 'tasks', 'resilience': 'res', 'monitor': 'mon', 'backup': 'backup', 'bumper': 'bump', 'agc': 'agc', 'automod': 'amod', 'interactions': 'ix', 'perms': 'perms', 'db': 'db', 'lastfm': 'lfm', 'scrape': 'scrape', 'nickname': 'nick'}
+CATEGORY_ORDER = ['general', 'settings', 'meta', 'utility', 'tools', 'developer', 'status', 'rpc', 'spoofer', 'multispoof', 'profile', 'profile_ext', 'profilesteal', 'badge', 'social', 'afk', 'auto', 'autoresponder', 'triggers', 'pack', 'fun', 'quests', 'sniper', 'voice', 'music', 'server', 'serverclone', 'mass', 'nuke', 'rolemgmt', 'guards', 'protect', 'automod', 'perms', 'information', 'search', 'scrape', 'lastfm', 'loggers', 'tracking', 'pingtrack', 'monitor', 'host', 'bot', 'botbridge', 'gc', 'webhooks', 'cleardm', 'filters', 'reminders', 'scheduler', 'tasks', 'resilience', 'backup', 'bumper', 'agc', 'interactions', 'db', 'nickname', 'downloads', 'themes', 'ai']
+CATEGORY_SHORT = {'general': 'core', 'settings': 'cfg', 'meta': 'meta', 'utility': 'util', 'tools': 'tools', 'developer': 'dev', 'status': 'status', 'rpc': 'rpc', 'spoofer': 'spoofer', 'multispoof': 'mspoof', 'profile': 'profile', 'profile_ext': 'profile+', 'profilesteal': 'psteal', 'badge': 'badge', 'social': 'social', 'afk': 'afk', 'auto': 'auto', 'autoresponder': 'ar', 'triggers': 'triggers', 'pack': 'pack', 'fun': 'fun', 'quests': 'quests', 'sniper': 'sniper', 'voice': 'voice', 'music': 'music', 'server': 'server', 'serverclone': 'clone', 'mass': 'mass', 'nuke': 'nuke', 'rolemgmt': 'roles', 'guards': 'guards', 'protect': 'protect', 'automod': 'amod', 'perms': 'perms', 'information': 'info', 'search': 'search', 'scrape': 'scrape', 'lastfm': 'lfm', 'loggers': 'loggers', 'tracking': 'tracking', 'pingtrack': 'pings', 'monitor': 'mon', 'host': 'host', 'bot': 'bot', 'botbridge': 'bridge', 'gc': 'gc', 'webhooks': 'hooks', 'cleardm': 'cdm', 'filters': 'filters', 'reminders': 'remind', 'scheduler': 'sched', 'tasks': 'tasks', 'resilience': 'res', 'backup': 'backup', 'bumper': 'bumper', 'agc': 'agc', 'interactions': 'ix', 'db': 'db', 'nickname': 'nick', 'downloads': 'dl', 'themes': 'themes', 'ai': 'ai'}
 
 @client.command(name='help', aliases=['h'])
-async def _help(ctx, *, query: str=''):
+async def _help(ctx, *, query: str = ''):
     from cogs import state as S
     import math
     raw = (query or '').strip().lower()
-    pfx = getattr(S, 'PREFIX', '.')
-    if not isinstance(pfx, str) or not pfx:
-        pfx = '.'
-    CPER, KPER = (14, 10)
+    pfx = getattr(S, 'PREFIX', '.') or '.'
+    CPER, KPER = 10, 10
     parts = raw.split()
     page = 1
     if parts and parts[-1].isdigit():
         page = max(1, int(parts.pop()))
-    q = ' '.join(parts)
+    q = ' '.join(parts).strip()
+
     cats = {}
     for cog in client.cogs.values():
-        cname = cog.qualified_name.lower()
-        cmds = [c for c in cog.get_commands() if not c.hidden and c.enabled]
+        cname = (cog.qualified_name or '').lower()
+        cmds = [c for c in cog.get_commands() if not getattr(c, 'hidden', False) and getattr(c, 'enabled', True)]
         if cmds:
             cats[cname] = sorted(cmds, key=lambda c: c.name)
+
+    async def _send(lines):
+        block = S._ansi_block(lines)
+        try:
+            return await ctx.message.edit(content=block)
+        except Exception:
+            return await S.safe_send(ctx.channel, block)
+
     if not q:
-        seen, ordered = (set(), [])
+        seen, ordered = set(), []
         for name in CATEGORY_ORDER:
             if name in cats and name not in seen:
                 ordered.append(name)
@@ -489,75 +492,84 @@ async def _help(ctx, *, query: str=''):
             if name not in seen:
                 ordered.append(name)
                 seen.add(name)
-        total = sum((len(v) for v in cats.values()))
+        total = sum(len(v) for v in cats.values())
         pages = max(1, math.ceil(len(ordered) / KPER))
         page = min(page, pages)
         chunk = ordered[(page - 1) * KPER:page * KPER]
-        lines = [f'{BRAND}wilt{RESET} {DIM}v{VERSION}{RESET} {GREY}| {total} cmds | {len(ordered)} categories{RESET}', '']
-        row = []
-        for cat in chunk:
-            n = len(cats[cat])
-            label = cat[:14]
-            row.append(f'{CYAN}{label:<14}{RESET}{DIM}{n:>3}{RESET}')
-            if len(row) == 2:
-                lines.append('  ' + '   '.join(row))
-                row = []
-        if row:
-            lines.append(' ' + '  '.join(row))
+
+        lines = [
+            f'{BRAND}wilt{RESET}  {DIM}v{VERSION}{RESET}  {GREY}·  {total} cmds  ·  {len(ordered)} cats{RESET}',
+            '',
+        ]
+        # two-column clean
+        left = chunk[::2]
+        right = chunk[1::2]
+        for i in range(max(len(left), len(right))):
+            L = left[i] if i < len(left) else None
+            R = right[i] if i < len(right) else None
+            if L is not None:
+                ln = f'  {CYAN}{L:<12}{RESET} {DIM}{len(cats[L]):>2}{RESET}'
+            else:
+                ln = ' ' * 17
+            if R is not None:
+                ln += f'    {CYAN}{R:<12}{RESET} {DIM}{len(cats[R]):>2}{RESET}'
+            lines.append(ln)
         lines.append('')
-        nav = f'{pfx}h <cat> | {pfx}h <cmd>'
         if pages > 1:
-            nav = f'{pfx}h {page % pages + 1} | ' + nav
-        lines.append(f'{DIM}{page}/{pages} | {nav}{RESET}')
-        try:
-            return await ctx.message.edit(content=S._ansi_block(lines))
-        except Exception:
-            return await S.safe_send(ctx.channel, S._ansi_block(lines))
+            nxt = page % pages + 1
+            lines.append(f'{DIM}  {page}/{pages}  ·  {pfx}h {nxt}  ·  {pfx}h <cat>  ·  {pfx}h <cmd>{RESET}')
+        else:
+            lines.append(f'{DIM}  {pfx}h <cat>  ·  {pfx}h <cmd>{RESET}')
+        return await _send(lines)
+
     if q in cats:
         cmds = cats[q]
         pages = max(1, math.ceil(len(cmds) / CPER))
         page = min(page, pages)
         chunk = cmds[(page - 1) * CPER:page * CPER]
-        col = min(14, max((len(c.name) for c in chunk), default=6))
-        lines = [f'{BRAND}wilt{RESET} {DIM}{q}{RESET} {GREY}{page}/{pages} | {len(cmds)}{RESET}', '']
+        lines = [
+            f'{BRAND}wilt{RESET}  {CYAN}{q}{RESET}  {GREY}·  {len(cmds)} cmds{RESET}',
+            '',
+        ]
         for c in chunk:
-            desc = (c.brief or (c.help or '').split('\n')[0] or '')[:28]
-            pad = ' ' * max(0, col - len(c.name))
-            lines.append(f' {CYAN}{c.name}{RESET}{pad} {DIM}{desc}{RESET}')
+            desc = (c.brief or (c.help or '').split('\n')[0] or '').strip()[:30]
+            lines.append(f'  {CYAN}{c.name:<13}{RESET} {DIM}{desc}{RESET}')
         lines.append('')
         if pages > 1:
-            lines.append(f'{DIM}{pfx}h {q} {page % pages + 1} | {pfx}h{RESET}')
+            nxt = page % pages + 1
+            lines.append(f'{DIM}  {page}/{pages}  ·  {pfx}h {q} {nxt}  ·  {pfx}h{RESET}')
         else:
-            lines.append(f'{DIM}{pfx}h{RESET}')
-        try:
-            return await ctx.message.edit(content=S._ansi_block(lines))
-        except Exception:
-            return await S.safe_send(ctx.channel, S._ansi_block(lines))
+            lines.append(f'{DIM}  {pfx}h{RESET}')
+        return await _send(lines)
+
     cmd = client.get_command(q)
-    if cmd:
+    if cmd is not None:
         cog_name = cmd.cog.qualified_name.lower() if cmd.cog else '-'
-        als = ' '.join(cmd.aliases[:4]) if cmd.aliases else '-'
-        sig = (cmd.signature or '')[:40]
-        desc = (cmd.help or cmd.brief or '-').split('\n')[0][:60]
-        lines = [f'{BRAND}wilt{RESET} {CYAN}{pfx}{cmd.name}{RESET} {DIM}{sig}{RESET}', f' {GREY}{desc}{RESET}', f' {DIM}{cog_name} | {als}{RESET}']
-        try:
-            return await ctx.message.edit(content=S._ansi_block(lines))
-        except Exception:
-            return await S.safe_send(ctx.channel, S._ansi_block(lines))
-    all_cmds = [c for cog in client.cogs.values() for c in cog.get_commands()]
-    matches = [c for c in all_cmds if q in c.name][:6]
+        als = ', '.join(cmd.aliases[:5]) if cmd.aliases else '-'
+        sig = (cmd.signature or '').strip()[:36]
+        desc = (cmd.help or cmd.brief or '-').split('\n')[0][:70]
+        lines = [
+            f'{BRAND}wilt{RESET}  {CYAN}{pfx}{cmd.name}{RESET}  {DIM}{sig}{RESET}',
+            f'  {GREY}{desc}{RESET}',
+            f'  {DIM}{cog_name}  ·  {als}{RESET}',
+        ]
+        return await _send(lines)
+
+    all_cmds = []
+    for cog in client.cogs.values():
+        all_cmds.extend(cog.get_commands())
+    matches = [c for c in all_cmds if q in c.name.lower()][:8]
     if matches:
-        lines = [f'{DIM}? {q}{RESET}', '']
+        lines = [f'{DIM}matches  {q}{RESET}', '']
         for c in matches:
-            lines.append(f' {CYAN}{pfx}{c.name}{RESET}')
-        try:
-            return await ctx.message.edit(content=S._ansi_block(lines))
-        except Exception:
-            return await S.safe_send(ctx.channel, S._ansi_block(lines))
-    try:
-        await ctx.message.edit(content=S.ui_err(f'unknown: {q}'))
-    except Exception:
-        await S.safe_send(ctx.channel, S.ui_err(f'unknown: {q}'))
+            lines.append(f'  {CYAN}{pfx}{c.name}{RESET}')
+        lines.append('')
+        lines.append(f'{DIM}  {pfx}h{RESET}')
+        return await _send(lines)
+
+    return await _send([f'{RED}not found{RESET}  {DIM}{q}{RESET}', f'{DIM}  {pfx}h{RESET}'])
+
+
 
 @client.command(name='ping')
 async def _ping(ctx):
