@@ -85,7 +85,7 @@ async def _run_satellite(token, props, label, stop_event):
                 browser = str(props.get("browser") or "")
                 is_mobile = browser in ("Discord Android", "Discord iOS")
                 is_vr = browser == "Discord VR"
-                caps = 8189 if (is_mobile or is_vr) else 16381
+                caps = 16381
                 identify = {
                     "op": 2,
                     "d": {

@@ -25,7 +25,8 @@ PREFIX = '.'
 STEALTH_DELETE = True
 STEALTH_DELETE_SECONDS = 5
 DISCORD_MSG_LIMIT = 2000
-VERSION = '3.2.8'
+CUSTOM_STATUS_TEXT = None
+VERSION = '3.3.8'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36'
 try:
     from utils.gateway import encode_super_properties as _enc_xsp
@@ -288,3 +289,47 @@ def ensure_filters():
             for kk, vv in v.items():
                 filters[k].setdefault(kk, vv)
     return filters
+
+
+async def rate_sleep(resp=None, default=1.5):
+    import asyncio
+    wait = default
+    try:
+        if resp is not None:
+            if hasattr(resp, 'headers') and resp.headers.get('Retry-After'):
+                wait = float(resp.headers.get('Retry-After'))
+            elif hasattr(resp, 'status') and resp.status == 429:
+                wait = max(default, 2.0)
+    except Exception:
+        pass
+    await asyncio.sleep(min(max(wait, 0.3), 30))
+
+
+def api_headers(extra=None):
+    import base64, json
+    token = _get_token()
+    props = {
+        "os": "Windows",
+        "browser": "Discord Client",
+        "device": "",
+        "system_locale": "en-US",
+        "browser_user_agent": USER_AGENT,
+        "browser_version": "1.0.9262",
+        "os_version": "10",
+        "release_channel": "stable",
+        "client_build_number": 630444,
+        "client_event_source": None,
+    }
+    h = {
+        "Authorization": token,
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+        "X-Super-Properties": base64.b64encode(json.dumps(props, separators=(",", ":")).encode()).decode(),
+        "X-Discord-Locale": "en-US",
+        "X-Discord-Timezone": "America/New_York",
+        "Origin": "https://discord.com",
+        "Referer": "https://discord.com/channels/@me",
+    }
+    if extra:
+        h.update(extra)
+    return h

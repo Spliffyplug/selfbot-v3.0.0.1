@@ -210,9 +210,27 @@ class GeneralCog(commands.Cog, name='general'):
         except Exception:
             pass
 
+
+    @commands.command(name='ping', brief='Latency')
+    async def ping(self, ctx):
+        ms = round(self.bot.latency * 1000)
+        await S.safe_edit(ctx.message, S.ui_ok(f'pong · {ms}ms'))
+
     @commands.command(name='info', brief='Bot info')
     async def info(self, ctx):
         await S.safe_edit(ctx.message, S.ui_box('wilt', [f'  {S.DIM}version{S.RESET}  {S.VERSION}', f'  {S.DIM}lib{S.RESET}      discord.py-self', f'  {S.DIM}guilds{S.RESET}   {len(self.bot.guilds)}', f'  {S.DIM}latency{S.RESET}  {round(self.bot.latency * 1000)}ms']))
+
+    @commands.command(name='banner', brief='Show user banner')
+    async def banner(self, ctx, user: discord.User = None):
+        u = user or ctx.author
+        try:
+            u = await self.bot.fetch_user(u.id)
+        except Exception:
+            pass
+        b = getattr(u, 'banner', None)
+        if b is None:
+            return await S.safe_edit(ctx.message, S.ui_err('no banner'))
+        await S.safe_edit(ctx.message, str(b.url))
 
     @commands.command(name='purgeall', brief='Delete ALL your messages in channel')
     async def purgeall(self, ctx):

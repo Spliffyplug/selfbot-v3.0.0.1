@@ -39,7 +39,7 @@ class WebhooksCog(commands.Cog, name='webhooks'):
                 await s.post(whs[0].url, json={'content': args})
             await S.safe_edit(ctx.message, S.ui_ok('sent via webhook'))
 
-    @commands.command(name='emojis', brief='List server emojis')
+    @commands.command(name='emoji_list', brief='List server emojis')
     @commands.guild_only()
     async def emojis(self, ctx):
         rows = [f'  {S.GREY}*{S.RESET} {e} `{e.name}` ({e.id})' for e in ctx.guild.emojis[:80]]

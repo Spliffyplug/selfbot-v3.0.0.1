@@ -45,11 +45,21 @@ async def _fetch_image_b64(url: str):
         return (None, str(e))
 
 async def _patch_me(payload: dict):
+    import asyncio as _aio
     try:
         async with aiohttp.ClientSession() as s:
-            async with s.patch('https://discord.com/api/v9/users/@me', headers=_h(), json=payload) as r:
-                text = await r.text()
-                return (r.status in (200, 201, 204), r.status, text)
+            for attempt in range(3):
+                async with s.patch('https://discord.com/api/v9/users/@me', headers=_h(), json=payload) as r:
+                    text = await r.text()
+                    if r.status == 429:
+                        try:
+                            wait = float((await r.json()).get('retry_after', 2))
+                        except Exception:
+                            wait = 2.0 + attempt
+                        await _aio.sleep(min(wait, 15))
+                        continue
+                    return (r.status in (200, 201, 204), r.status, text)
+            return (False, 429, 'rate limited')
     except Exception as e:
         return (False, 0, str(e))
 

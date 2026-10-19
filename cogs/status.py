@@ -1,6 +1,23 @@
 import asyncio, discord
 from discord.ext import commands
 from . import state as S
+
+async def _repush_rpc(bot):
+    try:
+        cog = bot.get_cog('rpc')
+        if cog is None:
+            for name, c in bot.cogs.items():
+                if name.lower() in ('rpc', 'rich presence'):
+                    cog = c
+                    break
+        if cog is not None and hasattr(cog, 'apply_activities'):
+            await cog.apply_activities()
+            return True
+    except Exception as e:
+        print('[status] repush rpc:', e)
+    return False
+
+
 from .antid import jitter
 
 def _custom_activity(name: str):
@@ -28,31 +45,37 @@ class StatusCog(commands.Cog, name='status'):
     async def status(self, ctx, *, text: str=''):
         activity = _custom_activity(text) if text else None
         await self.bot.change_presence(activity=activity)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok(f"status → {text or 'cleared'}"))
 
     @commands.command(name='clearstatus', brief='Clear status')
     async def clearstatus(self, ctx):
         await self.bot.change_presence(activity=None)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok('status cleared'))
 
     @commands.command(name='online', brief='Set online')
     async def online(self, ctx):
         await self.bot.change_presence(status=discord.Status.online)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok('status → online'))
 
     @commands.command(name='idle', brief='Set idle')
     async def idle(self, ctx):
         await self.bot.change_presence(status=discord.Status.idle)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok('status → idle'))
 
     @commands.command(name='dnd', brief='Set do not disturb')
     async def dnd(self, ctx):
         await self.bot.change_presence(status=discord.Status.dnd)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok('status → dnd'))
 
     @commands.command(name='invisible', brief='Set invisible')
     async def invisible(self, ctx):
         await self.bot.change_presence(status=discord.Status.invisible)
+        await _repush_rpc(self.bot)
         await S.safe_edit(ctx.message, S.ui_ok('status → invisible'))
 
     @commands.group(name='rotatestatus', aliases=['rss'], invoke_without_command=True)
@@ -75,7 +98,15 @@ class StatusCog(commands.Cog, name='status'):
             while True:
                 if self._rotate_statuses:
                     txt = self._rotate_statuses[i % len(self._rotate_statuses)]
-                    await self.bot.change_presence(activity=_custom_activity(txt))
+                    try:
+                        S.CUSTOM_STATUS_TEXT = txt
+                    except Exception:
+                        pass
+                    try:
+                        await self.bot.change_presence(activity=_custom_activity(txt))
+                    except Exception:
+                        pass
+                    await _repush_rpc(self.bot)
                     i += 1
                 await asyncio.sleep(jitter(interval))
         self._rotate_task = asyncio.create_task(_loop())

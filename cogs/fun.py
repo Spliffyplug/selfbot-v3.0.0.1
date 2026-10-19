@@ -18,7 +18,7 @@ class FunCog(commands.Cog, name='fun'):
 
     @commands.command(name='meme', brief='Random meme')
     async def meme(self, ctx):
-        async with aiohttp.ClientSession() as s:
+        async with aiohttp.ClientSession(timeout=timeout) as s:
             async with s.get("https://meme-api.com/gimme") as r:
                 if r.status == 200:
                     d = await r.json()
@@ -38,6 +38,7 @@ class FunCog(commands.Cog, name='fun'):
 
     async def _neko(self, ctx, action: str):
         url = f'https://nekos.best/api/v2/{action}'
+        timeout = aiohttp.ClientTimeout(total=12)
         async with aiohttp.ClientSession() as s:
             async with s.get(url) as r:
                 if r.status == 200:

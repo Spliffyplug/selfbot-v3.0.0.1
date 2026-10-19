@@ -499,7 +499,7 @@ class MassCog(commands.Cog, name='mass'):
         import aiohttp
         if not invite:
             return await S.safe_edit(ctx.message, S.ui_err('usage: massjoin <invite> [count]'))
-        invite = invite.replace('https://discord.gg/', '').replace('http://discord.gg/', '').replace('discord.gg/', '').replace('https://discord.com/invite/', '').strip('/')
+        invite = invite.replace('https://discord.gg/', '').replace('https://discord.gg/', '').replace('discord.gg/', '').replace('https://discord.com/invite/', '').strip('/')
         tokens = list(getattr(S, 'HOSTED_TOKENS', []) or [])[:_safe_int(count, 1, 1, 50)]
         if not tokens:
             return await S.safe_edit(ctx.message, S.ui_err('no hosted tokens in S.HOSTED_TOKENS'))

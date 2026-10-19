@@ -469,7 +469,7 @@ class SpooferCog(commands.Cog, name="spoofer"):
             props.get("device") or "-",
         )
 
-    @commands.command(name="spoof", aliases=["spoofer", "platform", "device"])
+    @commands.command(name="spoof", aliases=["spoofer", "device"])
     async def spoof(self, ctx, platform: str = "", sub: str = ""):
         p = (platform or "").lower().strip()
         if not p or p in ("status", "info"):

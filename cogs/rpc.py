@@ -15,8 +15,23 @@ DEFAULT_APP_ID = 1552026905023356938
 PURPLESTREAM_URL = 'https://www.twitch.tv/hadeontop'
 ICON_PLACEHOLDER = 'https://cdn.pfps.gg/pfps/20715-237182-lonely-girl-animated.gif'
 TYPE_MAP = {'playing': 0, 'streaming': 1, 'listening': 2, 'watching': 3, 'competing': 5, 'purplestream': 1}
-PLATFORM_ICON_KEYS = {'spotify': 'spotify', 'youtube': 'youtube', 'yt': 'youtube', 'xbox': 'xbox', 'ps': 'playstation', 'playstation': 'playstation', 'ps4': 'playstation', 'ps5': 'playstation', 'crunchy': 'crunchyroll', 'crunchyroll': 'crunchyroll', 'twitch': 'twitch', 'vrchat': 'vrchat', 'meta_quest': 'vrchat', 'quest': 'vrchat', 'roblox': 'roblox', 'rbx': 'roblox', 'minecraft': 'minecraft', 'mc': 'minecraft', 'fortnite': 'fortnite', 'fn': 'fortnite', 'valorant': 'valorant', 'val': 'valorant', 'netflix': 'netflix', 'vscode': 'code', 'code': 'code'}
-PLATFORM_PRESET_MAP = {'xbox': {'application_id': 438122941302046720, 'platform': 'xbox', 'name': 'Xbox', 'type': 0}, 'ps': {'application_id': 1001158269215858728, 'platform': 'ps5', 'name': 'PlayStation', 'type': 0}, 'ps4': {'application_id': 1001158269215858728, 'platform': 'ps4', 'name': 'PlayStation 4', 'type': 0}, 'ps5': {'application_id': 1001158269215858728, 'platform': 'ps5', 'name': 'PlayStation 5', 'type': 0}, 'playstation': {'application_id': 1001158269215858728, 'platform': 'ps5', 'name': 'PlayStation', 'type': 0}, 'youtube': {'application_id': 880988207033802783, 'platform': None, 'name': 'YouTube', 'type': 3}, 'yt': {'application_id': 880988207033802783, 'platform': None, 'name': 'YouTube', 'type': 3}, 'twitch': {'application_id': 880988207033802783, 'platform': None, 'name': 'Twitch', 'type': 3}, 'roblox': {'application_id': 963434583335854120, 'platform': None, 'name': 'Roblox', 'type': 0}, 'rbx': {'application_id': 963434583335854120, 'platform': None, 'name': 'Roblox', 'type': 0}, 'minecraft': {'application_id': 356875770142195712, 'platform': None, 'name': 'Minecraft', 'type': 0}, 'mc': {'application_id': 356875770142195712, 'platform': None, 'name': 'Minecraft', 'type': 0}, 'fortnite': {'application_id': 432980957394370572, 'platform': None, 'name': 'Fortnite', 'type': 0}, 'fn': {'application_id': 432980957394370572, 'platform': None, 'name': 'Fortnite', 'type': 0}, 'valorant': {'application_id': 700785226400399401, 'platform': None, 'name': 'VALORANT', 'type': 0}, 'val': {'application_id': 700785226400399401, 'platform': None, 'name': 'VALORANT', 'type': 0}, 'league': {'application_id': 401518684763717642, 'platform': None, 'name': 'League of Legends', 'type': 0}, 'lol': {'application_id': 401518684763717642, 'platform': None, 'name': 'League of Legends', 'type': 0}, 'riot': {'application_id': 401518684763717642, 'platform': None, 'name': 'League of Legends', 'type': 0}, 'netflix': {'application_id': 880988207033802783, 'platform': None, 'name': 'Netflix', 'type': 3}, 'vscode': {'application_id': 383226320970055681, 'platform': None, 'name': 'Visual Studio Code', 'type': 0}, 'code': {'application_id': 383226320970055681, 'platform': None, 'name': 'Code', 'type': 0}, 'vrchat': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'VRChat', 'type': 0}, 'meta_quest': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'Meta Quest', 'type': 0}, 'quest': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'Meta Quest', 'type': 0}, 'meta': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'Meta Quest', 'type': 0}, 'oculus': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'Meta Quest', 'type': 0}, 'spotify': {'application_id': None, 'platform': None, 'name': 'Spotify', 'type': 2}, 'crunchyroll': {'application_id': None, 'platform': None, 'name': 'Crunchyroll', 'type': 3}, 'crunchy': {'application_id': None, 'platform': None, 'name': 'Crunchyroll', 'type': 3}}
+PLATFORM_ICON_KEYS = {'spotify': 'spotify', 'youtube': 'youtube', 'xbox': 'xbox', 'ps5': 'playstation', 'crunchyroll': 'crunchyroll', 'twitch': 'twitch', 'meta': 'vrchat', 'roblox': 'roblox', 'minecraft': 'minecraft', 'fortnite': 'fortnite', 'valorant': 'valorant', 'netflix': 'netflix', 'vscode': 'code'}
+PLATFORM_PRESET_MAP = {
+    'xbox': {'application_id': 622174530214821906, 'platform': 'xbox', 'name': 'Xbox', 'type': 0, 'asset': 'xbox'},
+    'ps5': {'application_id': 1470539864909943067, 'platform': 'ps5', 'name': 'PlayStation 5', 'type': 0, 'asset': 'playstation'},
+    'youtube': {'application_id': 111299001912, 'platform': None, 'name': 'YouTube', 'type': 3, 'asset': 'youtube'},
+    'twitch': {'application_id': 111299001912, 'platform': None, 'name': 'Twitch', 'type': 3, 'asset': 'twitch'},
+    'netflix': {'application_id': None, 'platform': None, 'name': 'Netflix', 'type': 3, 'asset': 'https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.png'},
+    'roblox': {'application_id': 963434583335854120, 'platform': None, 'name': 'Roblox', 'type': 0},
+    'minecraft': {'application_id': 356875770142195712, 'platform': None, 'name': 'Minecraft', 'type': 0},
+    'fortnite': {'application_id': 432980957394370572, 'platform': None, 'name': 'Fortnite', 'type': 0},
+    'valorant': {'application_id': 700785226400399401, 'platform': None, 'name': 'VALORANT', 'type': 0},
+    'league': {'application_id': 401518684763717642, 'platform': None, 'name': 'League of Legends', 'type': 0},
+    'spotify': {'application_id': None, 'platform': None, 'name': 'Spotify', 'type': 2},
+    'crunchyroll': {'application_id': 981509069309354054, 'platform': None, 'name': 'Crunchyroll', 'type': 3, 'asset': 'crunchyroll'},
+    'meta': {'application_id': 1498387526501535835, 'platform': 'meta_quest', 'name': 'Meta Quest', 'type': 0, 'asset': 'vrchat'},
+    'vscode': {'application_id': 383226320970055681, 'platform': None, 'name': 'Visual Studio Code', 'type': 0},
+}
 
 _CUSTOM_PRESETS_PATH = Path('data/rpc_presets.json')
 _RUNTIME_PRESETS = {}
@@ -84,21 +99,57 @@ class RPCCog(commands.Cog, name='rpc'):
         bot_ws = self.bot.ws
 
         async def patched_send(data, *args, **kwargs):
-            if isinstance(data, str) and '"op":3' in data:
-                try:
+            if self._clearing:
+                return await self._original_ws_send(data, *args, **kwargs)
+            try:
+                payload = None
+                as_str = False
+                if isinstance(data, str) and '"op":3' in data:
                     payload = json.loads(data)
-                    d = payload.get('d', {})
-                    activities = d.get('activities', [])
-                    if not activities and any((slot is not None for slot in self.rpc_slots)):
-                        active = [s for s in self.rpc_slots if s is not None]
-                        if active and (not self._clearing):
-                            d['activities'] = active
-                            payload['d'] = d
-                            data = json.dumps(payload)
-                except Exception as _e:
-                    print(f'[rpc] ws_send patch: {_e}')
+                    as_str = True
+                elif isinstance(data, dict) and data.get('op') == 3:
+                    payload = data
+                if payload is not None:
+                    d = payload.get('d') or {}
+                    incoming = list(d.get('activities') or [])
+                    # keep custom status (type 4) from incoming
+                    custom = [a for a in incoming if isinstance(a, dict) and int(a.get('type', -1)) == 4]
+                    slots = []
+                    for s in self.rpc_slots:
+                        if isinstance(s, dict):
+                            slots.append(s)
+                    if slots:
+                        d['activities'] = slots + custom
+                        payload['d'] = d
+                        data = json.dumps(payload) if as_str else payload
+            except Exception as e:
+                print('[RPC] interceptor:', e)
             return await self._original_ws_send(data, *args, **kwargs)
+
         bot_ws.send = patched_send
+        if hasattr(bot_ws, 'send_as_json'):
+            _orig_saj = bot_ws.send_as_json
+            async def patched_saj(payload, *a, **k):
+                return await patched_send(payload if isinstance(payload, dict) else payload, *a, **k)
+            # send_as_json usually expects dict - wrap properly
+            async def patched_saj2(payload, *a, **k):
+                if self._clearing:
+                    return await _orig_saj(payload, *a, **k)
+                try:
+                    if isinstance(payload, dict) and payload.get('op') == 3:
+                        d = payload.get('d') or {}
+                        incoming = list(d.get('activities') or [])
+                        custom = [x for x in incoming if isinstance(x, dict) and int(x.get('type', -1)) == 4]
+                        slots = [s for s in self.rpc_slots if isinstance(s, dict)]
+                        if slots:
+                            d = dict(d)
+                            d['activities'] = slots + custom
+                            payload = dict(payload)
+                            payload['d'] = d
+                except Exception as e:
+                    print('[RPC] saj interceptor:', e)
+                return await _orig_saj(payload, *a, **k)
+            bot_ws.send_as_json = patched_saj2
         self._interceptor_active = True
         print('[RPC] Presence interceptor active')
 
@@ -210,6 +261,24 @@ class RPCCog(commands.Cog, name='rpc'):
             if a.get("name") or a.get("details") or a.get("state") or assets.get("large_image") or assets.get("small_image"):
                 active.append(a)
         if not active:
+            # hard clear presence
+            self._clearing = True
+            try:
+                payload = {'op': 3, 'd': {'since': 0, 'activities': [], 'status': 'online', 'afk': False}}
+                ws = getattr(self.bot, 'ws', None)
+                if ws is not None:
+                    send = getattr(ws, 'send_as_json', None) or getattr(ws, 'send_json', None)
+                    if send:
+                        await send(payload)
+                    elif hasattr(ws, 'send'):
+                        await ws.send(__import__('json').dumps(payload))
+                try:
+                    await self.bot.change_presence(activity=None)
+                except Exception:
+                    pass
+                self._save_rpc_slots()
+            finally:
+                self._clearing = False
             return
         try:
             await self._load_app_assets()
@@ -230,14 +299,24 @@ class RPCCog(commands.Cog, name='rpc'):
                 if not v:
                     continue
                 v = str(v).strip()
-                if v.startswith('http://') or v.startswith('https://') or v.startswith('mp:attachments/') or 'imgur.com' in v or 'cdn.discordapp.com' in v or 'media.discordapp.net' in v:
-                    a['application_id'] = default_app
-                    slot_app = default_app
+                # normalize imgur page links → direct image
+                if 'imgur.com/' in v and '/a/' not in v and not v.endswith(('.png','.jpg','.jpeg','.gif','.webp')):
+                    leaf = v.rstrip('/').split('/')[-1].split('?')[0]
+                    if leaf:
+                        v = 'https://i.imgur.com/%s.png' % leaf
+                is_url = (
+                    v.startswith('http://') or v.startswith('https://')
+                    or v.startswith('mp:attachments/') or v.startswith('mp:external/')
+                    or 'imgur.com' in v or 'cdn.discordapp.com' in v
+                    or 'media.discordapp.net' in v or 'i.imgur.com' in v
+                )
+                if is_url and not v.startswith('mp:external/'):
+                    # use THIS SLOT's application_id for external-assets (do not steal other slots' app)
                     try:
-                        prox = await self.upload_asset(v, app_id=default_app)
+                        prox = await self.upload_asset(v, app_id=slot_app)
                         new_assets[k] = prox or v
                     except Exception as e:
-                        print(f'[RPC] proxy {k}: {e}')
+                        print(f'[RPC] proxy slot={slot_app} {k}: {e}')
                         new_assets[k] = v
                 elif v.startswith('mp:external/'):
                     new_assets[k] = v
@@ -339,19 +418,16 @@ class RPCCog(commands.Cog, name='rpc'):
                         entry['buttons'] = labels
             raw.append(entry)
         status_map = {'online': 'online', 'idle': 'idle', 'dnd': 'dnd', 'invisible': 'invisible'}
+        # merge rotating custom status without wiping RPCs
+        try:
+            cst = getattr(S, 'CUSTOM_STATUS_TEXT', None)
+            if cst:
+                raw.append({'type': 4, 'state': str(cst)[:128], 'name': 'Custom Status'})
+        except Exception:
+            pass
         payload = {'op': 3, 'd': {'since': 0, 'activities': raw, 'status': status_map.get(current_status, 'online'), 'afk': False}}
-        if activities_objs and hasattr(self.bot, 'change_presence'):
-            try:
-                if len(activities_objs) == 1:
-                    await self.bot.change_presence(activity=activities_objs[0], status=current_status)
-                else:
-                    try:
-                        await self.bot.change_presence(activities=activities_objs, status=current_status)
-                    except TypeError:
-                        pass
-                print(f'[RPC] change_presence ok n={len(activities_objs)}')
-            except Exception as e:
-                print(f'[RPC] change_presence: {e}')
+        # multi-slot: do NOT use change_presence (library often keeps only 1 activity)
+        # OP3 below is the source of truth
         ws = getattr(self.bot, 'ws', None)
         if ws is not None:
             try:
@@ -368,9 +444,28 @@ class RPCCog(commands.Cog, name='rpc'):
         except Exception:
             pass
 
+    
+    def _normalize_activity(self, act: dict) -> dict:
+        if not isinstance(act, dict):
+            return act
+        a = dict(act)
+        aid = a.get('application_id')
+        if aid is not None:
+            try:
+                a['application_id'] = int(aid)
+            except Exception:
+                pass
+        # asset keys lowercased
+        assets = a.get('assets')
+        if isinstance(assets, dict):
+            for k in ('large_image', 'small_image'):
+                if isinstance(assets.get(k), str) and not assets[k].startswith(('http', 'mp:')):
+                    assets[k] = assets[k].lower()
+            a['assets'] = assets
+        return a
+
     async def apply_activities(self):
-        if any((a is not None for a in self.rpc_slots)):
-            await self._push()
+        await self._push()
 
     def _parse_timestamp_value(self, value: str) -> float:
         value = value.strip()
@@ -666,130 +761,117 @@ class RPCCog(commands.Cog, name='rpc'):
     async def upload_asset(self, image_url: str, app_id: int | None=None):
         if not image_url:
             return None
-        image_url = str(image_url).strip()
+        image_url = str(image_url).strip().strip('<>')
         app_id = int(app_id or DEFAULT_APP_ID)
-        cache_key = f'{app_id}:{image_url}'
+        cache_key = '%s:%s' % (app_id, image_url)
         if cache_key in self._asset_cache:
             return self._asset_cache[cache_key]
-        if image_url in self._asset_cache and (not image_url.startswith('http')):
-            return self._asset_cache[image_url]
         low = image_url.lower()
-        for pref in ('spotify:', 'youtube:', 'twitch:', 'mp:external/'):
-            if low.startswith(pref):
-                self._asset_cache[cache_key] = image_url
-                return image_url
         if low in ('spotify', 'youtube', 'twitch', 'xbox', 'playstation', 'ps5', 'ps4', 'crunchyroll', 'vrchat', 'game'):
             self._asset_cache[cache_key] = low
             return low
-        if image_url.startswith('mp:external/') or image_url.startswith('external/'):
-            key = image_url if image_url.startswith('mp:') else f'mp:{image_url}'
+        for pref in ('spotify:', 'youtube:', 'twitch:', 'mp:external/', 'mp:attachments/', 'mp:'):
+            if low.startswith(pref):
+                self._asset_cache[cache_key] = image_url
+                return image_url
+        if not low.startswith('http://') and not low.startswith('https://'):
+            self._asset_cache[cache_key] = low
+            return low
+        image_url = self._direct_image_url(image_url)
+        low = image_url.lower()
+        discord_cdn = re.search(
+            r'https?://(?:cdn\.discordapp\.com|media\.discordapp\.net)/attachments/(\d+)/(\d+)/([^?\s]+)',
+            image_url,
+        )
+        if discord_cdn:
+            cid, aid, fname = discord_cdn.groups()
+            key = 'mp:attachments/%s/%s/%s' % (cid, aid, fname)
             self._asset_cache[cache_key] = key
             return key
-        if not low.startswith('http://') and (not low.startswith('https://')) and (not low.startswith('mp:')):
-            key = low.replace(' ', '_')
-            for ext in ('.png', '.jpg', '.jpeg', '.gif', '.webp'):
-                if key.endswith(ext):
-                    key = key[:-len(ext)]
-            try:
-                await self._load_app_assets()
-            except Exception:
-                pass
-            key = self._resolve_portal_asset(key)
-            self._asset_cache[cache_key] = key
-            print(f'[RPC] portal -> {key}')
-            return key
-        source = image_url
-        if image_url.startswith('mp:attachments/'):
-            source = 'https://cdn.discordapp.com/attachments/' + image_url[len('mp:attachments/'):]
-        if 'cdn.discordapp.com' in source or 'media.discordapp.net' in source:
-            if '?' in source:
-                base = source.split('?')[0]
-                source = base
-
-        async def _parse_external(data, src):
-            key = None
-            if isinstance(data, list) and data:
-                item = data[0]
-                if isinstance(item, dict):
-                    key = item.get("external_asset_path") or item.get("path")
-                elif isinstance(item, str):
-                    key = item
-            elif isinstance(data, dict):
-                key = data.get(src) or data.get(image_url)
-                if isinstance(key, dict):
-                    key = key.get("external_asset_path") or key.get("path")
-                if not key:
-                    for v in data.values():
-                        if isinstance(v, dict) and (v.get("external_asset_path") or v.get("path")):
-                            key = v.get("external_asset_path") or v.get("path")
-                            break
-                        if isinstance(v, str) and ('external' in v or v.startswith('mp:')):
-                            key = v
-                            break
-            if not key:
-                return None
-            key = str(key)
-            if not key.startswith('mp:'):
-                key = f'mp:{key}'
-            while key.startswith('mp:mp:'):
-                key = key[3:]
-            self._asset_cache[cache_key] = key
-            self._asset_cache[image_url] = key
-            print(f'[RPC] external -> {key[:80]}')
-            return key
-        if hasattr(self.bot, 'proxy_external_application_assets'):
-            try:
-                mapped = await self.bot.proxy_external_application_assets(app_id, source)
-                key = await _parse_external(mapped, source)
-                if key:
-                    return key
-            except Exception as e:
-                print(f'[RPC] proxy_external_application_assets: {e}')
-        if hasattr(self.bot, 'proxy_external_assets'):
-            try:
-                mapped = await self.bot.proxy_external_assets(app_id, [source])
-                key = await _parse_external(mapped, source)
-                if key:
-                    return key
-            except Exception as e:
-                print(f'[RPC] proxy_external_assets: {e}')
+        token = getattr(getattr(self.bot, 'http', None), 'token', None) or S._get_token()
+        headers = {
+            'Authorization': token,
+            'Content-Type': 'application/json',
+            'User-Agent': getattr(S, 'USER_AGENT', 'Mozilla/5.0'),
+        }
         try:
-            token = getattr(getattr(self.bot, 'http', None), 'token', None) or getattr(S, 'TOKEN', None)
-            if token:
-                token = str(token).strip().strip('"').strip("'")
-                headers = {'Authorization': token, 'Content-Type': 'application/json', 'User-Agent': getattr(S, 'USER_AGENT', 'Mozilla/5.0')}
-                if getattr(S, 'X_SUPER_PROPERTIES', ''):
-                    headers['X-Super-Properties'] = S.X_SUPER_PROPERTIES
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(f'https://discord.com/api/v9/applications/{app_id}/external-assets', headers=headers, json={'urls': [source]}, timeout=aiohttp.ClientTimeout(total=25)) as r:
-                        body = await r.text()
-                        if r.status in (200, 201):
-                            try:
-                                data = __import__('json').loads(body)
-                            except Exception:
-                                data = None
-                            key = await _parse_external(data, source)
-                            if key:
+            headers = S.api_headers()
+            headers['Content-Type'] = 'application/json'
+        except Exception:
+            pass
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    'https://discord.com/api/v9/applications/%s/external-assets' % app_id,
+                    headers=headers,
+                    json={'urls': [image_url]},
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as r:
+                    text = await r.text()
+                    if r.status in (200, 201):
+                        data = await r.json()
+                        items = data if isinstance(data, list) else []
+                        if isinstance(data, dict):
+                            items = data.get('assets') or data.get('external_assets') or [data]
+                        for item in items:
+                            if not isinstance(item, dict):
+                                continue
+                            path = item.get('external_asset_path') or item.get('externalAssetPath') or item.get('path')
+                            if path:
+                                path = str(path)
+                                key = path if path.startswith('mp:') else ('mp:' + path)
+                                self._asset_cache[cache_key] = key
+                                self._asset_urls[key] = image_url
+                                print('[RPC] external-assets ok ->', key[:70])
                                 return key
-                        else:
-                            print(f'[RPC] external-assets {r.status}: {body[:160]}')
-                            if 'cdn.discordapp.com' in source:
-                                alt = source.replace('cdn.discordapp.com', 'media.discordapp.net')
-                                async with session.post(f'https://discord.com/api/v9/applications/{app_id}/external-assets', headers=headers, json={'urls': [alt]}, timeout=aiohttp.ClientTimeout(total=25)) as r2:
-                                    body2 = await r2.text()
-                                    if r2.status in (200, 201):
-                                        try:
-                                            data2 = __import__('json').loads(body2)
-                                        except Exception:
-                                            data2 = None
-                                        key = await _parse_external(data2, alt)
-                                        if key:
-                                            return key
+                        print('[RPC] external-assets empty:', text[:160])
+                    else:
+                        print('[RPC] external-assets', r.status, text[:160])
         except Exception as e:
-            print(f'[RPC] external-assets http: {e}')
-        print(f'[RPC] fallback raw URL (library may proxy): {source[:80]}')
-        self._asset_cache[cache_key] = source
-        return source
+            print('[RPC] external-assets err:', e)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(image_url, timeout=aiohttp.ClientTimeout(total=25), headers={'User-Agent': 'Mozilla/5.0'}) as r:
+                    if r.status != 200:
+                        print('[RPC] download fail', r.status)
+                        return None
+                    image_bytes = await r.read()
+            if len(image_bytes) < 64 or len(image_bytes) > 8000000:
+                return None
+            filename = 'rpc.png'
+            if image_bytes[:3] == b'\xff\xd8\xff':
+                filename = 'rpc.jpg'
+            elif image_bytes[:4] == b'RIFF':
+                filename = 'rpc.webp'
+            elif image_bytes[:6] in (b'GIF87a', b'GIF89a'):
+                filename = 'rpc.gif'
+            self_dm = await self.bot.user.create_dm()
+            msg = await self_dm.send(file=discord.File(io.BytesIO(image_bytes), filename=filename))
+            if msg.attachments:
+                new_url = msg.attachments[0].url
+                m2 = re.search(
+                    r'https?://(?:cdn\.discordapp\.com|media\.discordapp\.net)/attachments/(\d+)/(\d+)/([^?\s]+)',
+                    new_url,
+                )
+                if m2:
+                    cid, aid, fname = m2.groups()
+                    key = 'mp:attachments/%s/%s/%s' % (cid, aid, fname)
+                    self._asset_cache[cache_key] = key
+                    self._asset_urls[key] = image_url
+                    print('[RPC] dm-upload ok ->', key[:70])
+                    return key
+        except Exception as e:
+            print('[RPC] dm-upload err:', e)
+        return None
+
+    def _direct_image_url(self, url: str) -> str:
+        u = url.strip()
+        m = re.match(r'https?://(?:www\.)?imgur\.com/([A-Za-z0-9]+)(\.[a-zA-Z0-9]+)?/?$', u)
+        if m and 'i.imgur.com' not in u.lower():
+            ext = m.group(2) or '.png'
+            return 'https://i.imgur.com/%s%s' % (m.group(1), ext)
+        return u
+
 
     async def build_spotify(self, parts: list):
         if len(parts) < 2:
@@ -932,13 +1014,27 @@ class RPCCog(commands.Cog, name='rpc'):
         return act
 
     async def build_crunchyroll(self, parts: list):
-        anime = (parts[0] if parts else 'Crunchyroll')[:128]
-        logo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Crunchyroll_Logo.svg/512px-Crunchyroll_Logo.svg.png'
-        try:
-            prox = await self.upload_asset(logo, app_id=int(DEFAULT_APP_ID))
-        except Exception:
-            prox = logo
-        return {'type': 3, 'name': 'Crunchyroll', 'details': anime, 'application_id': int(DEFAULT_APP_ID), 'assets': {'large_image': prox or logo, 'large_text': anime[:32]}}
+        anime = (parts[0] if parts else 'Anime')[:128]
+        episode = (parts[1] if len(parts) > 1 else '')[:128]
+        elapsed = float(parts[2]) if len(parts) > 2 else 0.0
+        total = float(parts[3]) if len(parts) > 3 else 24.0
+        current_ms = int(elapsed * 60 * 1000)
+        total_ms = int(total * 60 * 1000)
+        now = int(time.time() * 1000)
+        act = {
+            'type': 3,
+            'name': 'Crunchyroll',
+            'details': anime,
+            'application_id': 981509069309354054,
+            'timestamps': {'start': now - current_ms, 'end': now - current_ms + total_ms},
+            'assets': {
+                'large_image': 'crunchyroll',
+                'large_text': (episode or anime)[:32],
+            },
+        }
+        if episode:
+            act['state'] = episode
+        return act
 
     async def build_vrchat(self, parts: list, image_url: str=None):
         state = parts[0] if parts else 'Exploring VRChat'
@@ -1027,44 +1123,44 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc1.command(name='large_image')
     async def rpc1_large_image(self, ctx, url: str):
         self._ensure_slot(0)
-        self.rpc_slots[0]['application_id'] = int(DEFAULT_APP_ID)
-        src = url
-        if str(url).startswith('http'):
+        if not self.rpc_slots[0].get('application_id'):
+            self.rpc_slots[0]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[0].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
             try:
-                ch = getattr(self, '_last_ctx_channel', ctx.channel)
-                cdn = await self.rehost_resized(ch, url, size=512)
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
                 if cdn:
-                    src = cdn
+                    key = await self.upload_asset(cdn, app_id=app_id)
             except Exception as e:
-                print(f'[RPC] large resize: {e}')
-        key = await self.upload_asset(src)
+                print('[RPC] large rehost:', e)
         if key:
             self.rpc_slots[0].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success(f'RPC1 large → `{str(key)[:40]}`'))
+            await ctx.send(ascii.success('RPC1 large → `' + str(key)[:50] + '`'))
         else:
-            await ctx.send(ascii.error('large image failed'))
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc1.command(name='small_image')
     async def rpc1_small_image(self, ctx, url: str):
         self._ensure_slot(0)
-        self.rpc_slots[0]['application_id'] = int(DEFAULT_APP_ID)
-        src = url
-        if str(url).startswith('http'):
+        if not self.rpc_slots[0].get('application_id'):
+            self.rpc_slots[0]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[0].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
             try:
-                ch = getattr(self, '_last_ctx_channel', ctx.channel)
-                cdn = await self.rehost_resized(ch, url, size=512)
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
                 if cdn:
-                    src = cdn
+                    key = await self.upload_asset(cdn, app_id=app_id)
             except Exception as e:
-                print(f'[RPC] small resize: {e}')
-        key = await self.upload_asset(src)
+                print('[RPC] small rehost:', e)
         if key:
             self.rpc_slots[0].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success(f'RPC1 small → `{str(key)[:40]}`'))
+            await ctx.send(ascii.success('RPC1 small → `' + str(key)[:50] + '`'))
         else:
-            await ctx.send(ascii.error('small image failed'))
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc1.command(name='timestamp')
     async def rpc1_timestamp(self, ctx, value: str):
@@ -1160,6 +1256,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc1.command(name='clear')
     async def rpc1_clear(self, ctx):
         self.rpc_slots[0] = None
+        self._slot_platform_preset[0] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC1 cleared'))
 
@@ -1230,21 +1327,45 @@ class RPCCog(commands.Cog, name='rpc'):
 
     @rpc2.command(name='large_image')
     async def rpc2_large_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(1)
+        if not self.rpc_slots[1].get('application_id'):
+            self.rpc_slots[1]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[1].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] large rehost:', e)
         if key:
-            self._ensure_slot(1)
             self.rpc_slots[1].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC2 large image set'))
+            await ctx.send(ascii.success('RPC2 large → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc2.command(name='small_image')
     async def rpc2_small_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(1)
+        if not self.rpc_slots[1].get('application_id'):
+            self.rpc_slots[1]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[1].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] small rehost:', e)
         if key:
-            self._ensure_slot(1)
             self.rpc_slots[1].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC2 small image set'))
+            await ctx.send(ascii.success('RPC2 small → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc2.command(name='timestamp')
     async def rpc2_timestamp(self, ctx, value: str):
@@ -1340,6 +1461,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc2.command(name='clear')
     async def rpc2_clear(self, ctx):
         self.rpc_slots[1] = None
+        self._slot_platform_preset[1] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC2 cleared'))
 
@@ -1410,21 +1532,45 @@ class RPCCog(commands.Cog, name='rpc'):
 
     @rpc3.command(name='large_image')
     async def rpc3_large_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(2)
+        if not self.rpc_slots[2].get('application_id'):
+            self.rpc_slots[2]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[2].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] large rehost:', e)
         if key:
-            self._ensure_slot(2)
             self.rpc_slots[2].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC3 large image set'))
+            await ctx.send(ascii.success('RPC3 large → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc3.command(name='small_image')
     async def rpc3_small_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(2)
+        if not self.rpc_slots[2].get('application_id'):
+            self.rpc_slots[2]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[2].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] small rehost:', e)
         if key:
-            self._ensure_slot(2)
             self.rpc_slots[2].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC3 small image set'))
+            await ctx.send(ascii.success('RPC3 small → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc3.command(name='timestamp')
     async def rpc3_timestamp(self, ctx, value: str):
@@ -1520,6 +1666,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc3.command(name='clear')
     async def rpc3_clear(self, ctx):
         self.rpc_slots[2] = None
+        self._slot_platform_preset[2] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC3 cleared'))
 
@@ -1590,21 +1737,45 @@ class RPCCog(commands.Cog, name='rpc'):
 
     @rpc4.command(name='large_image')
     async def rpc4_large_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(3)
+        if not self.rpc_slots[3].get('application_id'):
+            self.rpc_slots[3]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[3].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] large rehost:', e)
         if key:
-            self._ensure_slot(3)
             self.rpc_slots[3].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC4 large image set'))
+            await ctx.send(ascii.success('RPC4 large → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc4.command(name='small_image')
     async def rpc4_small_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(3)
+        if not self.rpc_slots[3].get('application_id'):
+            self.rpc_slots[3]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[3].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] small rehost:', e)
         if key:
-            self._ensure_slot(3)
             self.rpc_slots[3].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC4 small image set'))
+            await ctx.send(ascii.success('RPC4 small → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc4.command(name='timestamp')
     async def rpc4_timestamp(self, ctx, value: str):
@@ -1700,6 +1871,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc4.command(name='clear')
     async def rpc4_clear(self, ctx):
         self.rpc_slots[3] = None
+        self._slot_platform_preset[3] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC4 cleared'))
 
@@ -1770,21 +1942,45 @@ class RPCCog(commands.Cog, name='rpc'):
 
     @rpc5.command(name='large_image')
     async def rpc5_large_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(4)
+        if not self.rpc_slots[4].get('application_id'):
+            self.rpc_slots[4]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[4].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] large rehost:', e)
         if key:
-            self._ensure_slot(4)
             self.rpc_slots[4].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC5 large image set'))
+            await ctx.send(ascii.success('RPC5 large → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc5.command(name='small_image')
     async def rpc5_small_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(4)
+        if not self.rpc_slots[4].get('application_id'):
+            self.rpc_slots[4]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[4].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] small rehost:', e)
         if key:
-            self._ensure_slot(4)
             self.rpc_slots[4].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC5 small image set'))
+            await ctx.send(ascii.success('RPC5 small → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc5.command(name='timestamp')
     async def rpc5_timestamp(self, ctx, value: str):
@@ -1880,6 +2076,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc5.command(name='clear')
     async def rpc5_clear(self, ctx):
         self.rpc_slots[4] = None
+        self._slot_platform_preset[4] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC5 cleared'))
 
@@ -1950,21 +2147,45 @@ class RPCCog(commands.Cog, name='rpc'):
 
     @rpc6.command(name='large_image')
     async def rpc6_large_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(5)
+        if not self.rpc_slots[5].get('application_id'):
+            self.rpc_slots[5]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[5].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] large rehost:', e)
         if key:
-            self._ensure_slot(5)
             self.rpc_slots[5].setdefault('assets', {})['large_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC6 large image set'))
+            await ctx.send(ascii.success('RPC6 large → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('large image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc6.command(name='small_image')
     async def rpc6_small_image(self, ctx, url: str):
-        key = await self.upload_asset(url)
+        self._ensure_slot(5)
+        if not self.rpc_slots[5].get('application_id'):
+            self.rpc_slots[5]['application_id'] = int(DEFAULT_APP_ID)
+        app_id = int(self.rpc_slots[5].get('application_id') or DEFAULT_APP_ID)
+        key = await self.upload_asset(url, app_id=app_id)
+        if not key and str(url).startswith('http'):
+            try:
+                cdn = await self.rehost_resized(ctx.channel, url, size=512)
+                if cdn:
+                    key = await self.upload_asset(cdn, app_id=app_id)
+            except Exception as e:
+                print('[RPC] small rehost:', e)
         if key:
-            self._ensure_slot(5)
             self.rpc_slots[5].setdefault('assets', {})['small_image'] = key
             await self.apply_activities()
-            await ctx.send(ascii.success('RPC6 small image set'))
+            await ctx.send(ascii.success('RPC6 small → `' + str(key)[:50] + '`'))
+        else:
+            await ctx.send(ascii.error('small image failed — use .setappid <id> and a public direct image URL'))
 
     @rpc6.command(name='timestamp')
     async def rpc6_timestamp(self, ctx, value: str):
@@ -2060,6 +2281,7 @@ class RPCCog(commands.Cog, name='rpc'):
     @rpc6.command(name='clear')
     async def rpc6_clear(self, ctx):
         self.rpc_slots[5] = None
+        self._slot_platform_preset[5] = None
         await self.apply_activities()
         await ctx.send(ascii.info('RPC6 cleared'))
 
@@ -2343,6 +2565,38 @@ class RPCCog(commands.Cog, name='rpc'):
         self.rpc_slots[0] = await self.build_vscode(parts)
         await self.apply_activities()
         await ctx.send(ascii.success('VS Code → %s' % parts[0]))
+
+    
+    @commands.command(name='setappid', aliases=['rpcappid', 'appid'], brief='Set application_id on all RPC slots')
+    async def cmd_setappid(self, ctx, app_id: str = None, slot: int = 0):
+        if not app_id:
+            return await ctx.send(ascii.error('usage: .setappid <application_id> [slot 1-6|0=all]'))
+        try:
+            aid = int(str(app_id).strip())
+        except Exception:
+            return await ctx.send(ascii.error('app id must be a number'))
+        global DEFAULT_APP_ID
+        if slot in (0, None):
+            # update module default used by new slots
+            try:
+                import cogs.rpc as _rpcmod
+                _rpcmod.DEFAULT_APP_ID = aid
+            except Exception:
+                pass
+            globals()['DEFAULT_APP_ID'] = aid
+            for i in range(6):
+                if self.rpc_slots[i] is None:
+                    continue
+                self.rpc_slots[i]['application_id'] = aid
+            await self.apply_activities()
+            await ctx.send(ascii.success(f'app id {aid} → all active slots + default'))
+        else:
+            idx = max(1, min(6, int(slot))) - 1
+            self._ensure_slot(idx)
+            self.rpc_slots[idx]['application_id'] = aid
+            await self.apply_activities()
+            await ctx.send(ascii.success(f'app id {aid} → RPC{idx+1}'))
+
 
     @commands.command(name='platforms', aliases=['rpcplatforms', 'rpcpresets'])
     async def cmd_platforms(self, ctx):
