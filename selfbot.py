@@ -121,7 +121,7 @@ def _load_token():
             return t
     return ''
 TOKEN = _load_token()
-VERSION = '3.2.8'
+VERSION = '3.3.8'
 ESC = '\x1b'
 RESET = f'{ESC}[0m'
 GREY = f'{ESC}[2;37m'
@@ -452,7 +452,9 @@ class WiltBot(commands.Bot):
             return
         await super().process_commands(message)
 client = WiltBot()
-CATEGORY_ORDER = ['general', 'settings', 'meta', 'utility', 'tools', 'developer', 'status', 'rpc', 'spoofer', 'multispoof', 'profile', 'profile_ext', 'profilesteal', 'badge', 'social', 'afk', 'auto', 'autoresponder', 'triggers', 'pack', 'fun', 'quests', 'sniper', 'voice', 'music', 'server', 'serverclone', 'mass', 'nuke', 'rolemgmt', 'guards', 'protect', 'automod', 'perms', 'information', 'search', 'scrape', 'lastfm', 'loggers', 'tracking', 'pingtrack', 'monitor', 'host', 'bot', 'botbridge', 'gc', 'webhooks', 'cleardm', 'filters', 'reminders', 'scheduler', 'tasks', 'resilience', 'backup', 'bumper', 'agc', 'interactions', 'db', 'nickname', 'downloads', 'themes', 'ai']
+CAT_ALIASES = {'quest': 'quests', 'questing': 'quests', 'presence': 'rpc', 'richpresence': 'rpc', 'spoof': 'spoofer', 'device': 'spoofer', 'vc': 'voice', 'dl': 'downloads', 'massdm': 'mass', 'mod': 'automod', 'clone': 'serverclone', 'info': 'information'}
+
+CATEGORY_ORDER = ['general', 'settings', 'meta', 'utility', 'tools', 'developer', 'status', 'rpc', 'spoofer', 'multispoof', 'profile', 'profile_ext', 'profilesteal', 'badge', 'social', 'afk', 'auto', 'autoresponder', 'triggers', 'pack', 'fun', 'quests', 'sniper', 'voice', 'music', 'server', 'serverclone', 'mass', 'nuke', 'rolemgmt', 'guards', 'protect', 'automod', 'filters', 'perms', 'information', 'search', 'scrape', 'lastfm', 'loggers', 'tracking', 'pingtrack', 'monitor', 'host', 'bot', 'botbridge', 'gc', 'webhooks', 'cleanup', 'antiraid', 'reminders', 'scheduler', 'tasks', 'resilience', 'backup', 'bumper', 'agc', 'interactions', 'db', 'nickname', 'downloads', 'themes', 'ai', 'cleardm']
 CATEGORY_SHORT = {'general': 'core', 'settings': 'cfg', 'meta': 'meta', 'utility': 'util', 'tools': 'tools', 'developer': 'dev', 'status': 'status', 'rpc': 'rpc', 'spoofer': 'spoofer', 'multispoof': 'mspoof', 'profile': 'profile', 'profile_ext': 'profile+', 'profilesteal': 'psteal', 'badge': 'badge', 'social': 'social', 'afk': 'afk', 'auto': 'auto', 'autoresponder': 'ar', 'triggers': 'triggers', 'pack': 'pack', 'fun': 'fun', 'quests': 'quests', 'sniper': 'sniper', 'voice': 'voice', 'music': 'music', 'server': 'server', 'serverclone': 'clone', 'mass': 'mass', 'nuke': 'nuke', 'rolemgmt': 'roles', 'guards': 'guards', 'protect': 'protect', 'automod': 'amod', 'perms': 'perms', 'information': 'info', 'search': 'search', 'scrape': 'scrape', 'lastfm': 'lfm', 'loggers': 'loggers', 'tracking': 'tracking', 'pingtrack': 'pings', 'monitor': 'mon', 'host': 'host', 'bot': 'bot', 'botbridge': 'bridge', 'gc': 'gc', 'webhooks': 'hooks', 'cleardm': 'cdm', 'filters': 'filters', 'reminders': 'remind', 'scheduler': 'sched', 'tasks': 'tasks', 'resilience': 'res', 'backup': 'backup', 'bumper': 'bumper', 'agc': 'agc', 'interactions': 'ix', 'db': 'db', 'nickname': 'nick', 'downloads': 'dl', 'themes': 'themes', 'ai': 'ai'}
 
 @client.command(name='help', aliases=['h'])
@@ -467,6 +469,8 @@ async def _help(ctx, *, query: str = ''):
     if parts and parts[-1].isdigit():
         page = max(1, int(parts.pop()))
     q = ' '.join(parts).strip()
+    if q in CAT_ALIASES:
+        q = CAT_ALIASES[q]
 
     cats = {}
     for cog in client.cogs.values():
@@ -498,28 +502,17 @@ async def _help(ctx, *, query: str = ''):
         chunk = ordered[(page - 1) * KPER:page * KPER]
 
         lines = [
-            f'{BRAND}wilt{RESET}  {DIM}v{VERSION}{RESET}  {GREY}·  {total} cmds  ·  {len(ordered)} cats{RESET}',
+            f'{BRAND}wilt{RESET}  {DIM}v{VERSION}{RESET}  {GREY}· {total}cmds · {len(ordered)}cats{RESET}',
             '',
         ]
-        # two-column clean
-        left = chunk[::2]
-        right = chunk[1::2]
-        for i in range(max(len(left), len(right))):
-            L = left[i] if i < len(left) else None
-            R = right[i] if i < len(right) else None
-            if L is not None:
-                ln = f'  {CYAN}{L:<12}{RESET} {DIM}{len(cats[L]):>2}{RESET}'
-            else:
-                ln = ' ' * 17
-            if R is not None:
-                ln += f'    {CYAN}{R:<12}{RESET} {DIM}{len(cats[R]):>2}{RESET}'
-            lines.append(ln)
+        for name in chunk:
+            lines.append(f'  {CYAN}{name}{RESET}')
         lines.append('')
         if pages > 1:
             nxt = page % pages + 1
-            lines.append(f'{DIM}  {page}/{pages}  ·  {pfx}h {nxt}  ·  {pfx}h <cat>  ·  {pfx}h <cmd>{RESET}')
+            lines.append(f'{DIM}{page}/{pages} · {pfx}h {nxt} · {pfx}h <cat> · {pfx}h <cmd>{RESET}')
         else:
-            lines.append(f'{DIM}  {pfx}h <cat>  ·  {pfx}h <cmd>{RESET}')
+            lines.append(f'{DIM}{pfx}h <cat> · {pfx}h <cmd>{RESET}')
         return await _send(lines)
 
     if q in cats:
@@ -571,7 +564,6 @@ async def _help(ctx, *, query: str = ''):
 
 
 
-@client.command(name='ping')
 async def _ping(ctx):
     from cogs import state as S
     ms = round(client.latency * 1000)
